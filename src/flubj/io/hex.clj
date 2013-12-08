@@ -9,9 +9,8 @@
         [flubj.parser :only [hex-byte]])
   (:import [the.parsatron ParseError Continue]))
 
-(defn checksum [bytes]
-  (-> (reduce + bytes)
-      (unchecked-remainder-int 256)))
+(defn checksum "Compute a simple checksum of bytes."
+  [bytes] (-> (reduce + bytes) (unchecked-remainder-int 256)))
 
 
 
@@ -52,7 +51,7 @@
                      :else (always (vec (concat prev bytes))))))
           state cok cerr eok eerr)))))
 
-(def continuation?
+(def continuation? "Is the current line one containing a partial record?"
   (let->> [cont (lookahead (>> (char \:)
                                (many1 (token #{\0 \1 \2 \3 \4 \5 \6
                                                \7 \8 \9 \A \B \C \D
@@ -69,6 +68,8 @@
 
 (def hex-parser
   (many1 multi-or-single-line-record))
+
+ ;; User serviceable parts
 
 (defn parse-file [file]
   (run hex-parser (slurp file)))
