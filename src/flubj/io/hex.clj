@@ -71,5 +71,8 @@
 
  ;; User serviceable parts
 
+(defn str->bytes [^String s]
+  (run multi-or-single-line-record s))
+
 (defn parse-file [file]
   (run hex-parser (slurp file)))
