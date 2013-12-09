@@ -19,15 +19,20 @@
   (fn [{:keys [pos] :as state} cok cerr eok eerr]
     (eerr (expect-error (format "checksum 0x%x, got 0x%x" expected actual) pos))))
 
+(defmacro enforce [bytes cksum if-ok]
+  `(let [real-sum# (checksum ~bytes)]
+     (if (not= real-sum# ~cksum)
+       (checksum-error real-sum# ~cksum)
+       ~if-ok)))
+
 (def record-bytes (>> (token #{\:}) (many1 hex-byte)))
 
 (def single-line-record
-  (let->> [bytes record-bytes
-           cksum (either (>> (either (eof) (char \newline)) (always nil))
-                         (>> (token #{\$}) hex-byte))]
-          (if (and cksum (not= cksum (checksum bytes)))
-            (checksum-error (checksum bytes) cksum)
-            (always (vec bytes)))))
+  (let->> [bytesum record-bytes
+           _ (>> (either (eof) (char \newline)))]
+          (let [bytes (butlast bytesum)
+                cksum (last bytesum)]
+            (enforce bytes cksum (always (vec bytes))))))
 
 (defn multi-line-record
   "Consume a multi-line record.
@@ -51,19 +56,19 @@
                      :else (always (vec (concat prev bytes))))))
           state cok cerr eok eerr)))))
 
-(def continuation? "Is the current line one containing a partial record?"
+(def multi? "Is the current line part of a multi-line record?"
   (let->> [cont (lookahead (>> (char \:)
                                (many1 (token #{\0 \1 \2 \3 \4 \5 \6
                                                \7 \8 \9 \A \B \C \D
                                                \E \F}))
                                (choice (eof)
-                                       (char \*)
+                                       (token #{\* \$})
                                        (any-char))))]
-          (always (= \* cont))))
+          (always (boolean (#{\* \$} cont)))))
 
 (def multi-or-single-line-record
-  (let->> [cont? continuation?]
-          (if cont? (multi-line-record)
+  (let->> [mult? multi?]
+          (if mult? (multi-line-record)
               single-line-record)))
 
 (def hex-parser
