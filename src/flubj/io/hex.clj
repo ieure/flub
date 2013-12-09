@@ -19,7 +19,8 @@
   (fn [{:keys [pos] :as state} cok cerr eok eerr]
     (eerr (expect-error (format "checksum 0x%x, got 0x%x" expected actual) pos))))
 
-(defmacro enforce [bytes cksum if-ok]
+(defmacro enforce "Return an error on checksum mismatch."
+  [bytes cksum if-ok]
   `(let [real-sum# (checksum ~bytes)]
      (if (not= real-sum# ~cksum)
        (checksum-error real-sum# ~cksum)
@@ -34,6 +35,22 @@
                 cksum (last bytesum)]
             (enforce bytes cksum (always (vec bytes))))))
 
+ ;; Multiline
+
+(def ^:const multi-line-delims #{\* \$})
+(def multi? "Is the current line part of a multi-line record?"
+  (let->> [cont (lookahead (>> (char \:)
+                               (many1 (token #{\0 \1 \2 \3 \4 \5 \6
+                                               \7 \8 \9 \A \B \C \D
+                                               \E \F}))
+                               (choice (eof)
+                                       (token multi-line-delims)
+                                       (any-char))))]
+          (always (contains? multi-line-delims cont))))
+
+(defn cont? "Is this a continued line?" [c]
+  (= c \*))
+
 (defn multi-line-record
   "Consume a multi-line record.
 
@@ -46,25 +63,15 @@
      (fn [state cok cerr eok eerr]
        (Continue.
         #((let->> [bytes record-bytes
-                   sep (token #{\$ \*})
+                   sep (token multi-line-delims)
                    cksum hex-byte
                    _ (either (eof) (char \newline))]
-                  (let [real-sum (checksum bytes)]
-                    (cond
-                     (not= cksum real-sum) (checksum-error real-sum cksum)
-                     (= sep \*) (multi-line-record (concat prev bytes))
-                     :else (always (vec (concat prev bytes))))))
-          state cok cerr eok eerr)))))
+          (enforce bytes cksum
+                   (if (cont? sep) (multi-line-record (concat prev bytes))
+                       (always (vec (concat prev bytes))))))
+        state cok cerr eok eerr)))))
 
-(def multi? "Is the current line part of a multi-line record?"
-  (let->> [cont (lookahead (>> (char \:)
-                               (many1 (token #{\0 \1 \2 \3 \4 \5 \6
-                                               \7 \8 \9 \A \B \C \D
-                                               \E \F}))
-                               (choice (eof)
-                                       (token #{\* \$})
-                                       (any-char))))]
-          (always (boolean (#{\* \$} cont)))))
+
 
 (def multi-or-single-line-record
   (let->> [mult? multi?]
