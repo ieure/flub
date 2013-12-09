@@ -5,6 +5,22 @@
 ;;
 (ns flubj.io.bytes)
 
+(def ^:const pretty-format "%02X")
+
+(defn bytes->pretty* [bytes]
+  (let [n (count bytes)
+        base (repeat n pretty-format)
+        formats (if (> n 8)
+                  (let [[head tail] (split-at 8 base)]
+                    (concat head ["-"] tail))
+                  base)]
+    (apply format (join " " formats) bytes)))
+
+(defn bytes->pretty [bytes]
+  (->> (partition-all 16 bytes)
+       (map bytes->pretty*)
+       (join "\n" )))
+
 (defn- merge-bytes* "Merge a series of 8-bit values" [bytes]
   (reduce
    (fn [acc [byte shift]]
@@ -27,3 +43,14 @@
 (defn split-bytes "Turn an n-bit Long into a series of 8-bit Ints"
   [^Long value] ;; FIXME - implement this
   )
+
+ ;; Strings
+
+(defn- byte->7bit [byte]
+  (bit-and 2r01111111 byte))
+
+(defn ^String bytes->string [bytes]
+  (->> (map byte->7bit bytes)
+       (take-while #(> % 0))
+       (map clojure.core/char)
+       (apply str)))
