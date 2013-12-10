@@ -36,3 +36,9 @@
   (-> (cstr/lower-case s)
       (cstr/replace #" +" "-")
       (keyword)))
+
+
+
+(defmacro cont [p]
+  `(fn [state# cok# cerr# eok# eerr#]
+     (Continue. #(~p state# cok# cerr# eok# eerr#))))
