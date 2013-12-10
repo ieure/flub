@@ -4,6 +4,7 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.term
+  "Term parsers."
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
         [flub.parser.common]

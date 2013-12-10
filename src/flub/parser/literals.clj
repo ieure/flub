@@ -4,6 +4,7 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.literals
+  "Fluke literals, constants, etc."
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
         [flub.parser.common]

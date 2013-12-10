@@ -4,6 +4,7 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.common
+  "Common helpers for parsers."
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron])
   (:require [clojure.string :as cstr]))
@@ -18,7 +19,7 @@
     (either (attempt b)
             (always nil)))
 
-(defn- string* [& s]
+(defn string* [& s]
   (map string s))
 
 (defparser mchoice

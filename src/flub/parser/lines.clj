@@ -3,7 +3,7 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.parser.lines
+(ns flub.parser.lines "Lines, whitespace, and comments."
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
         [flub.parser.common]))

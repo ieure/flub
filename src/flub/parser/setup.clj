@@ -4,14 +4,12 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.setup
+  "Parsers for setup declarations."
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
         [flub.parser.lines]
         [flub.parser.literals]
-        [flub.parser.common]
-        ))
-
- ;; Setup
+        [flub.parser.common]))
 
 (def trap
   (let->> [decl (string "TRAP")
