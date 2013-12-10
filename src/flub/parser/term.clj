@@ -9,36 +9,55 @@
   (:use [the.parsatron]
         [flub.parser.common]
         [flub.parser.lines]
-        [flub.parser.literals]))
+        [flub.parser.literals])
+  (:import [the.parsatron Continue]))
 
-(defparser term-unary-operator-arg [op]
+(def optarget (choice register sym hex-constant))
+
+ ;; Unary operators
+
+(defparser unop-arg [op]
   (let->> [arg (>> optws decimal-constant)]
           (always [(kw op) (or arg 1)])))
 
-(def term-unary-operator-has-arg?
-  (let->> [n (either (attempt (>> optws decimal-constant))
-                     (always nil))]
+(def ^:private unop-arg?
+  (let->> [n (guard (>> optws decimal-constant))]
           (always n)))
 
-(def term-unary-operator
-  (let->> [op (apply mchoice (string* "CPL" "DEC" "INC" "SHR"))
-           arg? (lookahead term-unary-operator-has-arg?)]
+(def ^:private unop* (apply mchoice (string* "CPL" "DEC" "INC" "SHR")))
+
+(def unop
+  (let->> [op unop*
+           arg? (lookahead unop-arg?)]
           (if-not (nil? arg?)
-            (term-unary-operator-arg op)
+            (unop-arg op)
             (always [(kw op) 1]))))
 
-(def term-has-unop?
-  (let->> [op? (lookahead (apply mchoice (string* "CPL" "DEC" "INC" "SHR")))]
-          (always (empty? op?))))
+
 
-(defparser term-unop [term]
-  (let->> [ops (many1 (>> reqws term-unary-operator))]
-          (always [:term term ops])))
+(defn unops
+  ([] (unops []))
+  ([ops]
+     (cont (let->> [op (guard (>> reqws unop))]
+                   (if op
+                     (unops (conj ops op))
+                     (always ops))))))
+
+(def unop-term "Parse a term with one or more unary operators."
+  (let->> [tgt optarget
+           ops (unops)]
+          (always [:term tgt ops])))
+
+
+
+(def bare-term "Parse a term without any unary operators."
+  (let->> [tgt optarget]
+          (always [:term tgt])))
+
+(def has-unop?
+  (let->> [op? (lookahead (guard unop*))]
+          (always (not (empty? op?)))))
 
 (def term
-  (let->> [target (choice register sym hex-constant)
-           cont? term-has-unop?
-           #_(many (>> reqws term-unary-operator))
-           ]
-          (if cont? (term-unop target)
-              [:term target])))
+  (let->> [unop? (lookahead (guard (>> optarget reqws has-unop?)))]
+          (if unop? unop-term bare-term)))
