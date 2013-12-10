@@ -3,10 +3,10 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.io.record
+(ns flub.io.record
   (:refer-clojure :exclude [char comment long newline])
   (:use [the.parsatron]
-        [flubj.io.bytes :only [merge-bytes bytes->string]])
+        [flub.io.bytes :only [merge-bytes bytes->string]])
   (:import [the.parsatron ParseError Continue]))
 
 (def any (token (fn [& _] true)))

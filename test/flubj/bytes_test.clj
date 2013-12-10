@@ -3,10 +3,10 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.bytes-test
+(ns flub.bytes-test
   (:use [clojure.test]
         [the.parsatron :only [run]])
-  (:require [flubj.io.bytes :as b]))
+  (:require [flub.io.bytes :as b]))
 
 (deftest test-swap-bytes
   (is (= [0x34 0x12 0x78 0x56] (b/swap-bytes [0x12 0x34 0x56 0x78]))))

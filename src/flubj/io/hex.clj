@@ -3,10 +3,10 @@
 ;; © 2013 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.io.hex
+(ns flub.io.hex
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
-        [flubj.parser :only [hex-byte]])
+        [flub.parser :only [hex-byte]])
   (:import [the.parsatron ParseError Continue]))
 
 (defn checksum "Compute a simple checksum of bytes."

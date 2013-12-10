@@ -3,10 +3,10 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser.setup-test
+(ns flub.parser.setup-test
   (:use [clojure.test]
         [the.parsatron :only [run char >>]])
-  (:require [flubj.parser.setup :as s]))
+  (:require [flub.parser.setup :as s]))
 
 
 (deftest test-trap

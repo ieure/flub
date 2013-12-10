@@ -3,11 +3,11 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser.literals
+(ns flub.parser.literals
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
-        [flubj.parser.common]
-        [flubj.parser.lines])
+        [flub.parser.common]
+        [flub.parser.lines])
   (:require [clojure.string :as cstr]))
 
  ;; Constants etc

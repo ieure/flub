@@ -3,10 +3,10 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.io-test
+(ns flub.io-test
   (:use [clojure.test]
         [the.parsatron :only [run]])
-  (:require [flubj.io.hex :as hex]))
+  (:require [flub.io.hex :as hex]))
 
 (deftest test-single-line-record
   (is (= [1 231] (run hex/single-line-record ":01E7E8")))

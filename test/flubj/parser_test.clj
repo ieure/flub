@@ -3,171 +3,36 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser-test
+(ns flub.parser-test
   (:use [clojure.test]
         [the.parsatron :only [run digit char >>]])
-  (:require [flubj.parser :as p]
+  (:require [flub.parser :as p]
             [clojure.java.io :as io]))
 
-(deftest test-mchoice
-  (is (= \A (run (p/mchoice (char \A) (char \B)) "A")))
-  (is (= \B (run (p/mchoice (char \A) (char \B)) "B")))
-  (is (thrown? RuntimeException (run (p/mchoice (char \A) (char \B)) "0")))
-  (is (= \A (run (p/mchoice (>> (char \A) (char \A))
-                            (>> (char \A) (char \B)))
-                 "AA")))
-  (is (= \B (run (p/mchoice (>> (char \A) (char \A))
-                            (>> (char \A) (char \B)))
-                 "AB"))))
-
-(deftest test-mchoice*
-  (is (= [] (run (p/mchoice* (>> (char \A) (char \A))
-                             (>> (char \A) (char \B))) "")))
-  (is (= '(\A \A \A) (run (p/mchoice* (>> (char \A) (char \A))
-                                      (>> (char \A) (char \B)))
-                          "AAAAAA")))
-  (is (= '(\B \B \B) (run (p/mchoice* (>> (char \A) (char \A))
-                                      (>> (char \A) (char \B)))
-                 "ABABAB"))))
-
-(deftest test-mchoice+
-  (is (thrown? RuntimeException
-               (run (p/mchoice+ (>> (char \A) (char \A))
-                                (>> (char \A) (char \B))) "")))
-  (is (= '(\A \A \A) (run (p/mchoice+ (>> (char \A) (char \A))
-                                      (>> (char \A) (char \B)))
-                          "AAAAAA")))
-  (is (= '(\B \B \B) (run (p/mchoice+ (>> (char \A) (char \A))
-                                      (>> (char \A) (char \B)))
-                          "ABABAB"))))
-
-(deftest test-constants
-  (is (= \A (run p/hex-char "A")))
-  (is (= 255 (run p/hex-constant "FF")))
-  (is (= 255 (run p/decimal-constant "255")))
-  (is (= 42 (run p/binary-constant "101010"))))
-
-(deftest test-register
-  (is (= [:register 15] (run p/register "REGF")))
-  (is (thrown? RuntimeException (run p/register "REGZ"))))
-
-(deftest test-lines
-  (is (nil? (run p/ws "  \t   \t ")))
-  (is (thrown? RuntimeException (run p/ws "")))
-  (is (nil? (run p/optws "")))
-  (is (nil? (run p/optws "  \t   \t ")))
-  (is (nil? (run p/reqws "  \t   \t ")))
-  (is (thrown? RuntimeException (run p/reqws "")))
-
-  ;; EOL
-  (is (nil? (run p/eol "\n")))
-  (is (thrown? RuntimeException (run p/eol "")))
-  (is (nil? (run p/eol* "\n")))
-  (is (nil? (run p/eol* "      \n")))
-  (is (nil? (run p/eol* "  ! hey    \n")))
-  (is (nil? (run p/eol* "")))
-
-  ;; Lines
-  (is (= \0 (run (p/line-of (digit)) "0\n")))
-  (is (= \0 (run (p/line-of (digit)) "0  \n")))
-  (is (= \0 (run (p/line-of (digit)) "  0\n")))
-  (is (= \0 (run (p/line-of (digit)) "  0  \n")))
-  (is (= \0 (run (p/line-of (digit)) "0 ! hey\n")))
-  (is (= \0 (run (p/line-of (digit)) "0 ! hey \n")))
-  (is (= \0 (run (p/line-of (digit)) "  0 ! hey\n")))
-  (is (= \0 (run (p/line-of (digit)) "  0 ! hey \n")))
-  (is (= \0 (run (p/line-of (digit)) "  0 !hey\n")))
-  (is (= \0 (run (p/line-of (digit)) "  0 !hey \n")))
-  (is (= \0 (run (p/line-of (digit)) "  0 !hey\n"))))
-
-(deftest test-comments
-  (is (nil? (run p/comment "      ! sup mang"))))
-
-(deftest test-dash
-  (is (nil? (run p/dash "-")))
-  (is (nil? (run p/dash " -")))
-  (is (nil? (run p/dash "- ")))
-  (is (nil? (run p/dash " - "))))
-
-(deftest test-yes-no
-  (is (= true (run p/yes-no "YES")))
-  (is (= false (run p/yes-no "NO"))))
-
-(deftest test-address-range
-  (is (= [0 65535] (run p/address-range "0000-FFFF")))
-  (is (= [0 65535] (run p/address-range "0000 - FFFF"))))
-
-(deftest test-sym
-  (is (= :foo (run p/sym "foo")))
-  (is (= :foo_bar (run p/sym "foo_bar")))
-  (is (thrown? RuntimeException (run p/sym "10bar"))))
-
-(deftest test-fluke-string
-  (is (= "foo bar" (run p/fluke-string "\"foo bar\"")))
-  (is (thrown? RuntimeException (run p/fluke-string "\"foo bar")))
-  (is (thrown? RuntimeException (run p/fluke-string "'foo bar\"")))
-  (is (thrown? RuntimeException (run p/fluke-string "'foo bar'"))))
-
 (deftest test-term-unary-operator
-  ;; Known broken
-  #_(is (= [:inc 7] (run p/term-unary-operator "INC 7")))
+  (is (= [:inc 3] (run p/term-unary-operator "INC3")))
+  (is (= [:inc 7] (run p/term-unary-operator "INC 7")))
   (is (= [:inc 1] (run p/term-unary-operator "INC"))))
 
 (deftest test-term
-  (is (= [:term [:register 10] '([:shr 1] [:inc 1])]
+  (is (= '[:term [:register 10] ([:shr 1] [:inc 1])]
          (run p/term "REGA SHR INC")))
-  (is (= [:term 4660 '([:cpl 1] [:dec 1])]
+  (is (= '[:term [:register 1] ([:dec 1] [:dec 1])]
+         (run p/term "REG1 DEC DEC")))
+  (is (= '[:term 4660 ([:cpl 1] [:dec 1])]
          (run p/term "1234 CPL DEC")))
-  (is (= [:term 4660] (run p/term "1234 AND 4321")))
-  )
+  (is (= [:term 0x3FFF] (run p/term "3FFF")))
+  (is (= '[:term :FA ([:shr 3])] (run p/term "FA SHR 3")))
+  (is (= '[:term [:register 0x0A]] (run p/term "REGA")))
+  ;; Should not consume beyond what it can
+  (is (= '[:term [:register 0x0A]] (run p/term "REGA OR"))))
 
-#_(deftest test-expr
+(deftest test-duop*
+  (prn (run p/duop* "REGA OR"))
+)
+
+(deftest test-expr
   (prn (run p/expr "REGA AND 7F SHR INC OR FF")))
-
-(deftest test-trap
-  (is (= {:data-error true} (run p/trap "TRAP DATA ERROR YES")))
-  (is (thrown? RuntimeException
-               (run p/trap "   TRAP CONTROL ERROR YES  \n")))
-  (is (= {:control-error true}
-         (run p/trap "TRAP CONTROL ERROR YES"))))
-
-(deftest test-ram
-  (is (= [:ram 0 65535] (run p/ram "RAM 0000-FFFF")))
-  (is (= [:ram 0 65535] (run p/ram "RAM @ 0000-FFFF")))
-  (is (= [:ram 0 65535] (run p/ram "RAM @0000-FFFF"))))
-
-(deftest test-rom
-  (is (= [:rom 0 65535 4660] (run p/rom "ROM 0000-FFFF SIG 1234")))
-  (is (= [:rom 0 65535 4660] (run p/rom "ROM @ 0000-FFFF   SIG 1234")))
-  (is (= [:rom 0 65535 4660] (run p/rom "ROM @0000-FFFF SIG 1234"))))
-
-(deftest test-io
-  (is (= [:io 0 65535 127] (run p/io "I/O 0000-FFFF BITS 7F")))
-  (is (= [:io 0 65535 255] (run p/io "I/O @ 0000-FFFF   BITS FF")))
-  (is (= [:io 0 65535 10] (run p/io "I/O @0000-FFFF BITS 0A"))))
-
-(deftest test-address-space
-  (is (= [:address-space {:ram [[0 8191] [12288 12799]],
-                          :rom [[8192 12287 4660]]}]
-         (run p/address-space "ADDRESS SPACE\nRAM @ 0000-1FFF\nRAM 3000-31FF\nROM @ 2000-2FFF SIG 1234")))
-  (is (thrown? RuntimeException
-               (run p/address-space "ADDRESS SPACE INFORMATION\n"))))
-
-(deftest test-setup
-  (is (= [:setup {:active-interrupt false}]
-         (run p/setup "SETUP\nTRAP ACTIVE INTERRUPT NO")))
-  (is (= [:setup nil] (run p/setup "SETUP INFORMATION !hi")))
-  (is (= [:setup {:active-interrupt false
-                  :data-error true}]
-         (run p/setup "SETUP\n    TRAP ACTIVE INTERRUPT NO\n  TRAP DATA ERROR YES")))
-
-  (is (= [:setup {:active-force-line false
-                  :active-interrupt false}]
-         (run p/setup "SETUP
-
-   TRAP ACTIVE FORCE LINE NO
-   TRAP ACTIVE INTERRUPT NO
-"))))
 
 (deftest test-display
   (is (= [:display "HI"] (run p/display "DPY HI")))

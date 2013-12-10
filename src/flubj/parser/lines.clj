@@ -3,10 +3,10 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser.lines
+(ns flub.parser.lines
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
-        [flubj.parser.common]))
+        [flub.parser.common]))
 
  ;; Whitespace & line handling
 

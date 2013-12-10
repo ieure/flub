@@ -3,10 +3,10 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser.common-test
+(ns flub.parser.common-test
   (:use [clojure.test]
         [the.parsatron :only [run char >>]])
-  (:require [flubj.parser.common :as c]))
+  (:require [flub.parser.common :as c]))
 
 (deftest test-mchoice
   (is (= \A (run (c/mchoice (char \A) (char \B)) "A")))

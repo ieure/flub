@@ -3,10 +3,10 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser.literals-test
+(ns flub.parser.literals-test
   (:use [clojure.test]
         [the.parsatron :only [run digit char >>]])
-  (:require [flubj.parser.literals :as l]))
+  (:require [flub.parser.literals :as l]))
 
 ;; FIXME
 (deftest test-chars->long)

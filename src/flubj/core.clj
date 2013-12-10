@@ -1,3 +1,3 @@
-(ns flubj.core)
+(ns flub.core)
 
 

@@ -3,7 +3,7 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser.common
+(ns flub.parser.common
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron])
   (:require [clojure.string :as cstr]))

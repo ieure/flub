@@ -3,10 +3,10 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser.lines-test
+(ns flub.parser.lines-test
   (:use [clojure.test]
         [the.parsatron :only [run digit char >>]])
-  (:require [flubj.parser.lines :as l]))
+  (:require [flub.parser.lines :as l]))
 
 (deftest test-lines
   (is (nil? (run l/ws "  \t   \t ")))

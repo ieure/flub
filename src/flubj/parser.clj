@@ -3,130 +3,12 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser
+(ns flub.parser
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron])
-  (:require [clojure.string :as cstr]))
+  (:import [the.parsatron Continue]))
 
-(defn- chars->long  "Convert a sequence of characters to a Long."
-  [chars base]
-  (Long/parseLong (apply str chars) base))
 
-(defn kw  "Convert a string to a keyword."
-  [s]
-  (-> (cstr/lower-case s)
-      (cstr/replace #" +" "-")
-      (keyword)))
-
-
-
-(defparser butchar
-;;  "Match any token except `c'."
-  [c]
-  (token #(not= c %)))
-
-(defn- string* [& s]
-  (map string s))
-
-(defparser mchoice
-;;  "Multiple-choice; attempt each of `parsers' in turn."
-  [& parsers]
-  (apply choice (map attempt parsers)))
-
-(defparser mchoice*
-  ;;  "Multiple-choice; attempt each of `parsers' in turn."
-  [& parsers]
-  (many (apply mchoice parsers)))
-
-(defparser mchoice+
-  ;;  "Multiple-choice; attempt each of `parsers' in turn."
-  [& parsers]
-  (many1 (apply mchoice parsers)))
-
- ;; Whitespace & line handling
-
-(def ws "Match one non-newline whitespace char. Don't use this directly."
-  (>> (token #{\space \tab}) (always nil)))
-
-(def anyws "Match any whitespace character."
-  (>> (many (token #{\space \tab \newline})) (always nil)))
-
-(def optws "Match 0 or more non-newline whitespace chars."
-  (>> (many ws) (always nil)))
-
-(def reqws "Match 1 or more non-newline whitespace characters."
-  (>> (many1 ws) (always nil)))
-
-(def comment "Match a comment at the end of a line. Don't use directly."
-  (let->> [_ (>> optws (char \!) (many (butchar \newline)))]
-          (always nil)))
-
-(def eol "Match a single newline. Don't use directly."
-  (>> (char \newline) (always nil)))
-
-(def eol* "Match to EOL, including comment."
-  (>> optws (many comment) (either eol (eof))))
-
-(defparser line-of
-  ;; "Match a line which contains `parser'.
-
-  ;;  A line may contain leading and trailing whitespace, an optional
-  ;;  comment, and MUST end with an EOL character."
-  [parser]
-  (let->> [_ optws
-           r parser
-           _ eol*]
-          (always r)))
-
- ;; Constants etc
-
-(def hex-char "Match a single hexadecimal character."
-  (either (digit) (token #{\A \B \C \D \E \F})))
-
-(def hex-constant "Match a hexidecimal constant."
-  (let->> [chars (many1 hex-char)]
-          (always (chars->long chars 16))))
-
-(def binary-constant "Match a binary constant."
-  (let->> [chars (many1 (either (char \0) (char \1)))]
-          (always (chars->long chars 2))))
-
-(def decimal-constant "Match a decimal constant."
-  (let->> [chars (many1 (digit))]
-          (always (chars->long chars 10))))
-
-(def register "Match a register reference."
-  (let->> [decl (string "REG")
-           regn hex-char]
-          (always [:register (chars->long [regn] 16)])))
-
-(def dash
-  (let->> [_ (>> optws (char \-) optws)]
-          (always nil)))
-
-(def yes-no
-  (let->> [v (either (string "YES") (string "NO"))]
-          (always (if (= v "YES") true
-                      false))))
-
-(def address-range
-  (let->> [start hex-constant
-           _ optws
-           _ (char \-)
-           _ optws
-           end hex-constant]
-          (always [start end])))
-
-(def sym
-  (let->> [head (letter)
-           tail (many1 (choice (letter) (digit) (char \_)))]
-          (always (keyword (str (str head) (apply str tail))))))
-
-(def fluke-string
-  (let->> [_ (char \")
-           value (many1 (choice (letter) (digit) (char \.) (char \space)))
-           _ (char \")]
-          (always (apply str value))))
 
  ;; Unary operators
 
@@ -141,30 +23,58 @@
 
  ;; Expressions
 
-;; FIXME - needs number of times shortcut, but (attempt) still throws
-;; an exception, which is whack.
+(defparser term-unary-operator-arg [op]
+  (let->> [arg (>> optws decimal-constant)]
+          (always [(kw op) (or arg 1)])))
+
+(def term-unary-operator-has-arg?
+  (let->> [n (either (attempt (>> optws decimal-constant))
+                     (always nil))]
+          (always n)))
+
 (def term-unary-operator
-  (let->> [op (apply mchoice (string* "CPL" "DEC" "INC" "SHR"))]
-          (always [(kw op) 1])))
+  (let->> [op (apply mchoice (string* "CPL" "DEC" "INC" "SHR"))
+           arg? (lookahead term-unary-operator-has-arg?)]
+          (if-not (nil? arg?)
+            (term-unary-operator-arg op)
+            (always [(kw op) 1]))))
+
+(def term-has-unop?
+  (let->> [op? (lookahead (apply mchoice (string* "CPL" "DEC" "INC" "SHR")))]
+          (always (empty? op?))))
+
+(defparser term-unop [term]
+  (let->> [ops (many1 (>> reqws term-unary-operator))]
+          (always [:term term ops])))
 
 (def term
-  (let->> [target (mchoice* register sym hex-constant)
-           ops (attempt (many (>> reqws term-unary-operator)))]
-          (always [:term (first target) ops])))
+  (let->> [target (choice register sym hex-constant)
+           cont? term-has-unop?
+           #_(many (>> reqws term-unary-operator))
+           ]
+          (if cont? (term-unop target)
+              [:term target])))
 
 (def expression
-  (mchoice hex-constant register))
+  (mchoice sym hex-constant register))
 
 (def combining
   (let->> [comb (choice (string "AND") (string "OR"))
            r (>> reqws term)]
           (always [(kw comb) r])))
 
-#_(def expr
+(def duop*
+  (>> term reqws (string* "OR" "AND"))
+  #_(let->> [l term
+           op (string* "OR" "AND")
+           ;; r (>> reqws term)
+           ]
+          (always :sup)))
+
+(def expr
   (let->> [l term
            c (attempt (>> reqws combining))]
-          (always l))
-  )
+          (always l)))
 
  ;; Tests
 (def comparison )
@@ -176,70 +86,6 @@
            file fluke-string]
           (always [:include file])))
 
- ;; Setup
-
-(def trap
-  (let->> [decl (string "TRAP")
-           _ reqws
-           trap-type (choice
-                      (string "BAD POWER SUPPLY")
-                      (string "ILLEGAL ADDRESS")
-                      ;; Docs lie! If you TRAP ACTIVE INTERRUPT, this
-                      ;; throws a parse error.
-                      (attempt (string "ACTIVE FORCE LINE"))
-                      (string "ACTIVE INTERRUPT")
-                      (string "CONTROL ERROR")
-                      (string "ADDRESS ERROR")
-                      (string "DATA ERROR"))
-           _ reqws
-           v yes-no]
-          (always {(kw trap-type) v})))
-
-(def pod
-  (let->> [_ (>> (string "POD") reqws)
-           ;; fixme dash
-           podn (many1 (choice (letter) (digit) (char \') (char \/)))]
-          (always [:pod podn])))
-
-(def setup
-  ;; Most specific has to come first!
-  (let->> [decl (line-of (either (attempt (string "SETUP INFORMATION"))
-                                 (string "SETUP")))
-           _ anyws
-           trapdefs (many (line-of trap))]
-          (always [:setup (apply merge trapdefs)])))
-
-(def ram
-  (let->> [_ (>> (string "RAM")
-                 (choice (attempt (>> reqws (char \@) optws)) reqws))
-           [start end] address-range]
-          (always [:ram start end])))
-
-(def rom
-  (let->> [_ (>> (string "ROM")
-                 (choice (attempt (>> reqws (char \@) optws)) reqws))
-           [start end] address-range
-           _ reqws
-           sig (>> (string "SIG") reqws hex-constant)]
-          (always [:rom start end sig])))
-
-(def io
-  (let->> [_ (>> (string "I/O")
-                 (choice (attempt (>> reqws (char \@) optws)) reqws))
-           [start end] address-range
-           _ reqws
-           bits (>> (string "BITS") reqws hex-constant)]
-          (always [:io start end bits])))
-
-(def address-space
-  (let->> [decl (line-of (either (attempt
-                                  (string "ADDRESS SPACE INFORMATION"))
-                                 (string "ADDRESS SPACE")))
-           spaces (many1 (line-of (choice (attempt ram) rom io)))]
-          (always [:address-space
-                   (->> (group-by first spaces)
-                        (mapv (fn [[k v]] [k (mapv #(vec (rest %)) v)]))
-                        (into {}))])))
 
  ;; Statements
 

@@ -3,12 +3,12 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.parser.setup
+(ns flub.parser.setup
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
-        [flubj.parser.lines]
-        [flubj.parser.literals]
-        [flubj.parser.common]
+        [flub.parser.lines]
+        [flub.parser.literals]
+        [flub.parser.common]
         ))
 
  ;; Setup

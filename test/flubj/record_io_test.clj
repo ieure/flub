@@ -3,12 +3,12 @@
 ;; © 2013 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flubj.record-io-test
+(ns flub.record-io-test
   (:use [clojure.test]
         [clojure.pprint]
         [the.parsatron :only [run]])
-  (:require [flubj.io.record :as rec]
-            [flubj.io.hex :as hex]))
+  (:require [flub.io.record :as rec]
+            [flub.io.hex :as hex]))
 
 (deftest test-trap
   (is (= [:trap {:trap-illegal-address true,
@@ -55,5 +55,5 @@
   (is (= [:rom 63488 65535 1448607744] (run rec/address-descriptor (hex/str->bytes ":19000000F80000FFFF03000000000058560000C0")))))
 
 (deftest test-bytes->records
-  (pprint (rec/bytes->records (hex/parse-file "/Users/ieure/Dropbox/Projects/flubj/68000.H")))
+  (pprint (rec/bytes->records (hex/parse-file "/Users/ieure/Dropbox/Projects/flub/68000.H")))
   )
