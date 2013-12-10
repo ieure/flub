@@ -9,4 +9,5 @@
   (:require [flub.parser.duop :as d]))
 
 (deftest test-duop
-  (is (= [:or [:term [:register 10] [[:inc 1]]] [:term 127]] (run d/duop "REGA INC OR 7F"))))
+  (is (= [:or [:term [:register 10] [[:inc 1]]] [:term 127]] (run d/duop "REGA INC OR 7F")))
+  (is (nil? (run d/duop "7FFF"))))

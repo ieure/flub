@@ -11,8 +11,10 @@
         [flub.parser.literals]
         [flub.parser.term]))
 
-(def duop
+(def ^:private duop*
   (let->> [l term
            comb (>> reqws (apply mchoice (string* "AND" "OR")))
            r (>> reqws term)]
           (always [(kw comb) l r])))
+
+(def duop (guard duop*))
