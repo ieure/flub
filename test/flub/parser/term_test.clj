@@ -29,7 +29,7 @@
   (is (= [:term 0x3FFF] (run t/bare-term "3FFF")))
   (is (= [:term :FA] (run t/bare-term "FA")))
   (is (= [:term [:register 0x0A]] (run t/bare-term "REGA OR")))
-  (is (= \space (run (>> t/bare-term (any-char)) "REGA OR"))))
+  (is (= \O (run (>> t/bare-term (any-char) (any-char)) "REGA OR"))))
 
 (deftest test-unop-term
   (is (= [:term [:register 10] '([:inc 1])]
@@ -56,4 +56,5 @@
   (is (= '[:term :FA ([:shr 3])] (run t/term "FA SHR 3")))
   (is (= '[:term [:register 0x0A]] (run t/term "REGA")))
   ;; Should not consume beyond what it can
-  (is (= '[:term [:register 0x0A]] (run t/term "REGA OR"))))
+  (is (= [:term [:register 0x0A]] (run t/term "REGA OR")))
+  (is (= '[:term [:register 0x0A] ([:dec 1])] (run t/term "REGA DEC AND"))))
