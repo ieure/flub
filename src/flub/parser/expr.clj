@@ -13,8 +13,10 @@
 
 (def comb (apply mchoice (string* "AND" "OR")))
 
+(declare expr)
+
 (defparser expr* [combn l]
-  (let->> [r term]
+  (let->> [r expr]
           (always [:expr [(kw combn) l r]])))
 
 (def expr
