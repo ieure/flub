@@ -14,16 +14,13 @@
 (def trap
   (let->> [decl (string "TRAP")
            _ reqws
-           trap-type (choice
-                      (string "BAD POWER SUPPLY")
-                      (string "ILLEGAL ADDRESS")
-                      ;; Docs lie! If you TRAP ACTIVE INTERRUPT, this
-                      ;; throws a parse error.
-                      (attempt (string "ACTIVE FORCE LINE"))
-                      (string "ACTIVE INTERRUPT")
-                      (string "CONTROL ERROR")
-                      (string "ADDRESS ERROR")
-                      (string "DATA ERROR"))
+           trap-type (apply mchoice (string* "BAD POWER SUPPLY"
+                                             "ILLEGAL ADDRESS"
+                                             "ACTIVE FORCE LINE"
+                                             "ACTIVE INTERRUPT"
+                                             "CONTROL ERROR"
+                                             "ADDRESS ERROR"
+                                             "DATA ERROR"))
            _ reqws
            v yes-no]
           (always {(kw trap-type) v})))

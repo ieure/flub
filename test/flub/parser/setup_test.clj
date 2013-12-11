@@ -8,7 +8,6 @@
         [the.parsatron :only [run char >>]])
   (:require [flub.parser.setup :as s]))
 
-
 (deftest test-trap
   (is (= {:data-error true} (run s/trap "TRAP DATA ERROR YES")))
   (is (thrown? RuntimeException
