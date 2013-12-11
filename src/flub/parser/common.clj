@@ -7,7 +7,8 @@
   "Common helpers for parsers."
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron])
-  (:require [clojure.string :as cstr]))
+  (:require [clojure.string :as cstr])
+  (:import [the.parsatron Continue]))
 
 (defparser butchar
   ;;  "Match any token except `c'."
@@ -42,3 +43,12 @@
 (defmacro cont [p]
   `(fn [state# cok# cerr# eok# eerr#]
      (Continue. #(~p state# cok# cerr# eok# eerr#))))
+
+(defn pdebug [p]
+  (fn [{:keys [input pos] :as state} cok cerr eok eerr]
+    (printf "%s <- %s\n" p {:input input :pos (:column pos)})
+    (Continue. #(p state cok cerr eok eerr))))
+
+(defparser guard [p]
+  (either (attempt p)
+          (always nil)))
