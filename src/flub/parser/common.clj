@@ -33,7 +33,7 @@
   [& parsers]
   (many (apply mchoice parsers)))
 
-(defn kw  "Convert a string to a keyword." [s]
+(defn kw "Convert a string to a keyword." [s]
   (-> (cstr/lower-case s)
       (cstr/replace #" +" "-")
       (keyword)))
