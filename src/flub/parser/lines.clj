@@ -30,7 +30,7 @@
   (>> (char \newline) (always nil)))
 
 (def eol* "Match to EOL, including comment."
-  (>> optws (many comment) (either eol (eof))))
+  (>> optws (guard comment) (either eol (eof))))
 
 (defparser line-of
   ;; "Match a line which contains `parser'.

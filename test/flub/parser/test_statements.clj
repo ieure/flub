@@ -32,3 +32,6 @@
   (is (= [:write 2135039 [:term 17]] (run p/write "WRITE @ 2093FF = 11")))
   (is (= [:write 2136064 [:term 0]] (run p/write "WRITE @ 209800 = 0")))
   (is (= [:write 2137087 [:term 17]] (run p/write "WRITE @ 209BFF = 11"))))
+
+(deftest test-unary-operator
+  (is (= [:inc [:register 0xF]] (run p/unary-operator "INC REGF"))))

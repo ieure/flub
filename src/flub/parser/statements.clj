@@ -4,13 +4,12 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.statements
-  (:refer-clojure :exclude [char comment])
+  (:refer-clojure :exclude [char comment read])
   (:use [the.parsatron]
         [flub.parser.common]
         [flub.parser.lines]
         [flub.parser.literals]
-        [flub.parser.expr]
-        ))
+        [flub.parser.expr]))
 
 (def display
   (let->> [_ (>> (string "DPY") (token #{\space \tab \-}))
@@ -31,7 +30,7 @@
   (let->> [dest (choice register sym)
            _ (>> optws (char \=) optws)
            ex expr]
-          (always [:assign dest expr])))
+          (always [:assign dest ex])))
 
 (defparser wc
   ;; Wildcard; matches `*', defaulting to `default'.
@@ -52,3 +51,23 @@
            _ (>> optws (char \=) optws)
            value (either (wc [:register 14]) expr)]
           (always [:write dest value])))
+
+(def unary-operator
+    (let->> [op (choice (string "CPL")
+                        (string "DEC")
+                        (string "INC")
+                        (string "SHL")
+                        (string "SHR"))
+             target (>> reqws (either register sym))]
+            (always [(kw op) target])))
+
+(def bus-test
+  (>> (apply mchoice (string* "BUS TEST" "BUS")) (always [:bus-test])))
+
+(def goto
+  (let->> [t (>> (string "GOTO") reqws (either (attempt sym) hex-constant))]
+          (always [:goto t])))
+
+(def stop (>> (string "STOP") (always :stop)))
+
+(def run-uut (>> (string "RUN UUT") (always :run-uut)))

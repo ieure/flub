@@ -70,3 +70,8 @@
                    (->> (group-by first spaces)
                         (mapv (fn [[k v]] [k (mapv #(vec (rest %)) v)]))
                         (into {}))])))
+
+(def include
+  (let->> [_ (>> (string "INCLUDE") reqws)
+           file fluke-string]
+          (always [:include file])))

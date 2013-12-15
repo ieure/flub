@@ -35,7 +35,13 @@
   (is (= \0 (run (l/line-of (digit)) "  0 ! hey \n")))
   (is (= \0 (run (l/line-of (digit)) "  0 !hey\n")))
   (is (= \0 (run (l/line-of (digit)) "  0 !hey \n")))
-  (is (= \0 (run (l/line-of (digit)) "  0 !hey\n"))))
+  (is (= \0 (run (l/line-of (digit)) "  0 !hey\n")))
+
+  ;; Blank lines
+  (is (= nil (run (l/line-of l/optws) "
+
+")))
+  )
 
 (deftest test-comments
   (is (nil? (run l/comment "      ! sup mang"))))
