@@ -4,6 +4,7 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.common-test
+  (:refer-clojure :exclude [char])
   (:use [clojure.test]
         [the.parsatron :only [run char >>]])
   (:require [flub.parser.common :as c]))
