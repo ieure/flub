@@ -3,7 +3,8 @@
 ;; © 2013 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.sig)
+(ns flub.sig
+  (:import [java.nio ByteBuffer]))
 
 (def ^:private ^:const starting-offsets [6 8 11 15 0])
 
@@ -21,19 +22,23 @@
 (defn rotbits "Return a seq of shifted bytes for `bytes'" [bytes]
   (mapcat rotbits* bytes))
 
-(defn signature "Return the Fluke signature of the input." [^bytes bytes]
-  (let [l (alength bytes)
+(defmulti sign "Return the Fluke signature of the input." type)
+
+(defmethod sign bytes [^bytes bytes]
+  (sign (ByteBuffer/wrap bytes)))
+
+(defmethod sign ByteBuffer [^ByteBuffer bytes]
+  (let [l (.capacity bytes)
         ;; Buffer of checksummed bytes
         ^bytes buf (byte-array 16 (byte 0))]
-    (loop [i 0
-           os starting-offsets]
-      (when (< i l)
+    (loop [os starting-offsets]
+      (when (.hasRemaining bytes)
         ;; This XORs the current byte of the input with the bytes of
         ;; `buf' pointed to by positions 0-3 in `os' The result is
         ;; stored into `buf', in the position indicated by the last
         ;; element of `os'.
         (->> (map #(aget buf %) (butlast os))
-             (apply bit-xor (aget bytes i))
+             (apply bit-xor (.get bytes))
              (aset-byte buf (last os)))
         ;; Decrement offsets
         ;; The os vector contains a list of pointers which sweep
@@ -41,7 +46,7 @@
         ;; is decremented after the XOR operation, resetting it back
         ;; to the last element of `buf' when it reaches the lower
         ;; bound.
-        (recur (+ i 1) (mapv #(mod (- % 1) 16) os))))
+        (recur (mapv #(mod (- % 1) 16) os))))
 
     ;; Final checksum calculation.
     ;; For each shifted value of buf:
