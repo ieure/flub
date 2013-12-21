@@ -1,0 +1,126 @@
+S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
+     PROGRAM+
+
+<BOL> = SEP
+<COMMENT> = "!" #".*"
+<EOL> = SEP? COMMENT? "\n"
+
+<DASH> = ((SEP* "-" SEP*)? | " "+)
+<AT> = ((SEP* "@" SEP*)? | " "+)
+<EQ> = (SEP* "=" SEP*)
+<SEP> = <(" " | "\t")+>
+
+DEC = #"[0-9]+"
+HEX = #"[0-9A-F]+"
+
+YN = "YES" | "NO"
+
+REGISTER = <"REG" " "*> #"[0-9A-F]"
+
+TERM_UNOP = ("CPL" | "DEC" | "INC" | "SHR") <" "+> DEC?
+
+TERM = (HEX | DEC | REGISTER) (<" "+> TERM_UNOP)?
+
+EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
+
+SYMBOL = #"[A-Z][A-Z0-9_]+"
+
+(* Docs say this is an EXPR rather than HEX, but that seems insane. *)
+ADDRESS_BLOCK = HEX (<DASH> HEX)
+
+INCLUDE = <'INCLUDE "'> #'[^"]+' <'"'>
+
+
+
+(* Setting up *)
+
+SETUP = <"SETUP" (" INFORMATION")? EOL>
+        (<BOL>? (SETUP_BEEP | SETUP_BUS_TEST | SETUP_ENABLE |
+         SETUP_EXERCISE_ERRORS | SETUP_LINESIZE | SETUP_NEWLINE |
+         SETUP_POD | SETUP_RUN_UUT | SETUP_STALL |
+         SETUP_UNSTALL | SETUP_TIMEOUT | SETUP_TRAP | <EOL>) <EOL>?)+
+
+SETUP_BEEP = "BEEP ON ERR TRANSITION" DASH YN
+SETUP_BUS_TEST = <"BUS" (" TEST")? AT> HEX
+FORCING_LINE = "WAIT" | "RDY" | "TSC" | "DBE" | "HALT" | "BR/ACK" |
+               "INTR" | "MR" | "DMA" | "UNUSED" | "READY" | "BUSRQ" | "HOLD" |
+               "RQGT0" | "RQGT1"
+SETUP_ENABLE = <"ENABLE "> FORCING_LINE DASH YN
+SETUP_EXERCISE_ERRORS = <"EXERCISE ERRORS" DASH> YN
+SETUP_LINESIZE = <"LINESIZE" " "+> DEC
+SETUP_NEWLINE = <"NEWLINE" " "+> HEX
+SETUP_POD = <"POD" DASH> ("1802" | "6502" | "6800" | "68000" | "6802" |
+                          "6809" | "6809E" | "8041" | "'35/48" | "'39/49" |
+                          "'40/50" | "8080" | "8085" | "8086" | "8086MX" |
+                          "8088" | "8088MX" | "9900" | "Z80")
+SETUP_RUN_UUT = <"RUN UUT" AT> HEX
+SETUP_STALL = <"STALL" " "+> HEX
+SETUP_UNSTALL = <"UNSTALL" " "+> HEX
+SETUP_TIMEOUT = <"TIMEOUT" DASH> DEC
+SETUP_TRAP = <"TRAP" " "+>
+             ("BAD POWER SUPPLY" | "ILLEGAL ADDRESS" | "ACTIVE INTERRUPT" |
+              "ACTIVE FORCE LINE" | "CONTROL ERROR" | "ADDRESS ERROR" |
+              "DATA ERROR")
+             <DASH> YN
+
+
+
+(* Address Space *)
+
+ADDRESS_SPACE = <"ADDRESS SPACE" (" INFORMATION")? EOL>
+                ((RAM | ROM | IO | <EOL>)+ <EOL>?)
+
+RAM = <"RAM" AT> ADDRESS_BLOCK
+ROM = <"ROM" AT> ADDRESS_BLOCK <SEP> "SIG" <SEP> HEX
+IO = <"IO" AT> ADDRESS_BLOCK <SEP> "BITS" <SEP> HEX
+
+
+
+(* Declarations *)
+DECLARATIONS = <"DECLARATIONS" EOL> (DECL_ASSIGN | <EOL>)+ EOL?
+(* FIXME this is somewhat too loose - commas are optional *)
+DECL_ASSIGN = <SEP>? "ASSIGN" <SEP> REGISTER <SEP> "TO" <SEP> (SYMBOL | (SYMBOL <","? SEP?>)+)
+
+
+
+(* Programs *)
+
+PROGRAM = PROGRAM_HEAD <EOL> PROGRAM_BODY
+PROGRAM_HEAD = <"PROGRAM" SEP> (DEC | SYMBOL) (<SEP> DEC <SEP> "BYTES")?
+PROGRAM_BODY = DECLARATIONS? ((<BOL>? STATEMENT <EOL>) | <EOL>)+
+STATEMENT = (ATOG | AUTO_TEST | BUS_TEST | DISPLAY | DTOG | EXECUTE | GOTO |
+             IF | IOTEST | LABEL | LEARN | READ_PROBE | RAM_TEST | RAMP |
+             READ | REG_ASSIGN | ROM_TEST | RUN_UUT | STOP | SYNC | UNARY |
+             WALK | WRITE)
+
+ATOG = <"ATOG" AT> HEX <SEP> "BIT" DEC
+AUTO_TEST = "AUTO" (" TEST")?
+(* FIXME - aux *)
+BUS_TEST = "BUS" (" TEST")?
+DISPLAY = <"DPY" (" " | "-" | "\t")> #"[A-Z0-9;@=<>'\.\?#\+\-,%\*\\/\"\$_ ]+"
+
+DTOG = <"DTOG" AT> (HEX | "CTL" | "*") <SEP>? "=" <SEP>? (EXPR | "*") <SEP>
+                   "BIT" <SEP> (EXPR | "*")
+EXECUTE = <("EXECUTE" | "EX") (SEP "PROGRAM")? SEP> (DEC | SYMBOL)
+GOTO = <"GOTO" SEP> (HEX | SYMBOL)
+IF = <"IF" SEP> EXPR SEP? (">" | "=" | ">=") SEP? EXPR <SEP> GOTO
+IOTEST = <"IO" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "BTS" <SEP> (EXPR | "*"))?
+LABEL = (HEX | SYMBOL) <":"> <(SEP "LABEL" SEP (HEX | SYMBOL))>?
+LEARN = <"LEARN"> (<AT> ADDRESS_BLOCK)?
+READ_PROBE = <("READ" | "RD") SEP "PROBE">
+RAM_TEST = <"RAM"> (<SEP> ("SHORT" | "LONG"))? (<AT> ADDRESS_BLOCK)?
+RAMP = <"RAMP" AT> (HEX | "*")
+READ = <("READ" | "RD") AT> (HEX | REGISTER | "*" | "STS")
+REG_ASSIGN = (REGISTER | SYMBOL) <EQ> EXPR
+(* FIXME - add to auto test, bus test, ram test, rom test, io test,
+           read, write, ramp, walk, atog, dtog *)
+REPT_LOOP = ("REPT" SEP?)* "LOOP"?
+ROM_TEST = <"ROM" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "SIG" <SEP> (HEX | "*"))?
+RUN_UUT = <"RUN UUT"> (<AT> HEX)?
+STOP = "STOP"
+SYNC = <"SYNC" SEP> (HEX | "ADDRESS" | "DATA"| ("FREE" DASH "RUN"))
+UNARY = ("CPL" | "DEC" | "INC" | "SHL" | "SHR") <SEP> (REGISTER | SYMBOL)
+WALK = <"WALK" AT> (HEX | "*") EQ (EXPR | "*")
+(* Docs say WRITE can target an address or `*', but source in the wild
+   has registers. *)
+WRITE = <("WRITE" | "WR") AT> (HEX | REGISTER | "CTL" | "*") <SEP>? "=" <SEP>? (EXPR | "*")
