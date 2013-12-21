@@ -24,8 +24,8 @@
 
 (defmulti sign "Return the Fluke signature of the input." type)
 
-(defmethod sign bytes [^bytes bytes]
-  (sign (ByteBuffer/wrap bytes)))
+(defmethod sign "[B" [^bytes bytes]
+  (sign (ByteBuffer/wrap bytes)))       ; Wrap byte arrays in ByteBuffer
 
 (defmethod sign ByteBuffer [^ByteBuffer bytes]
   (let [l (.capacity bytes)
