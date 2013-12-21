@@ -5,9 +5,15 @@
 ;;
 (ns flub.parser.source
   (:require [instaparse.core :as insta]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as string]))
+
+(def ^:constant eol #"(\n|\r|\r\n)")
 
 (def p (insta/parser (slurp (io/resource "source.ebnf"))))
 
+(defn normalize-newlines [inp]
+  (string/replace inp eol "\n"))
+
 (defn source->ast [inp]
-  (p inp))
+  (p (normalize-newlines inp)))
