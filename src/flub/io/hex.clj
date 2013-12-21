@@ -5,8 +5,7 @@
 ;;
 (ns flub.io.hex
   (:refer-clojure :exclude [char comment])
-  (:use [the.parsatron]
-        [flub.parser :only [hex-byte]])
+  (:use [the.parsatron])
   (:import [the.parsatron ParseError Continue]))
 
 (defn checksum "Compute a simple checksum of bytes."
@@ -18,6 +17,18 @@
   [expected actual]
   (fn [{:keys [pos] :as state} cok cerr eok eerr]
     (eerr (expect-error (format "checksum 0x%x, got 0x%x" expected actual) pos))))
+
+(defn- chars->long  "Convert a sequence of characters to a Long."
+  [chars base]
+  (Long/parseLong (apply str chars) base))
+
+(def hex-char "Match a single hexadecimal character."
+  (either (digit) (token #{\A \B \C \D \E \F})))
+
+(def hex-byte "Match a hexidecimal byte."
+  (let->> [chars (times 2 hex-char)]
+          (always (chars->long chars 16))))
+
 
 (defmacro enforce "Return an error on checksum mismatch."
   [bytes cksum if-ok]
