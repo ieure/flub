@@ -28,7 +28,7 @@ SYMBOL = #"[A-Z][A-Z0-9_]+"
 (* Docs say this is an EXPR rather than HEX, but that seems insane. *)
 ADDRESS_BLOCK = HEX (<DASH> HEX)
 
-INCLUDE = <'INCLUDE "'> #'[^"]+' <'"'>
+INCLUDE = <'INCLUDE' SEP '"'> #'[^"]+' <'"'>
 
 
 
@@ -89,7 +89,7 @@ PROGRAM = PROGRAM_HEAD <EOL> PROGRAM_BODY
 PROGRAM_HEAD = <"PROGRAM" SEP> (DEC | SYMBOL) (<SEP> DEC <SEP> "BYTES")?
 PROGRAM_BODY = DECLARATIONS? ((<BOL>? STATEMENT <EOL>) | <EOL>)+
 STATEMENT = (ATOG | AUTO_TEST | BUS_TEST | DISPLAY | DTOG | EXECUTE | GOTO |
-             IF | IOTEST | LABEL | LEARN | READ_PROBE | RAM_TEST | RAMP |
+             IF | INCLUDE | IOTEST | LABEL | LEARN | READ_PROBE | RAM_TEST | RAMP |
              READ | REG_ASSIGN | ROM_TEST | RUN_UUT | STOP | SYNC | UNARY |
              WALK | WRITE)
 
