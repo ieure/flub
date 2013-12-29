@@ -12,7 +12,10 @@
 (deftest test-reg-assign
   (is (parsed? (p/p "REG2 = REG3 DEC" :start :REG_ASSIGN)))
   (is (parsed? (p/p "REG3 DEC" :start :EXPR)))
-  (is (parsed? (p/p "REG3 DEC" :start :TERM))))
+  (is (parsed? (p/p "REG3 DEC" :start :TERM)))
+  (is (parsed? (p/p "REG1 = REG0 SHR SHR SHR SHR SHR SHR SHR SHR" :start :REG_ASSIGN)))
+  (is (parsed? (p/p "REG0 SHR SHR SHR SHR SHR SHR SHR SHR" :start :TERM)))
+  (is (parsed? (p/p "REG0 = REG8 AND FFF000 SHR SHR SHR SHR SHR SHR SHR SHR SHR SHR SHR SHR" :start :REG_ASSIGN))))
 
 (deftest test-address-block
   (is (parsed? (p/p "RAM SHORT @ REG6-REG7" :start :RAM_TEST)))
@@ -22,8 +25,13 @@
   (is (parsed? (p/p "ROM TEST @ REG8-REG8 OR 7FF SIG REG6" :start :ROM_TEST))))
 
 (deftest test-program-head
-  (is (parsed? (p/p "PROGRAM 91   207 BYTES : Frequency - in Utilities.bin" :start :PROGRAM_HEAD))))
+  ;; This is invalid according to the docs
+  (is (parsed? (p/p "PROGRAM 91   207 BYTES : Frequency - in Utilities.bin" :start :PROGRAM_HEAD)))
+  (is (parsed? (p/p "PROGRAM delay" :start :PROGRAM_HEAD))))
 
 (deftest test-label-statement
   (is (parsed? (p/p "C: DPY-DATA ERROR-SENT $1-REC'D $E" :start :STATEMENT)
                "Statements can follow labels")))
+
+(deftest test-write
+  (is (parsed? "WRITE @ REGF INC = REG3 AND FF" :start :WRITE)))
