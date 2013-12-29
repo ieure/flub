@@ -8,7 +8,7 @@
             [clojure.java.io :as io]
             [clojure.string :as string]))
 
-(def ^:constant eol #"(\n|\r|\r\n)")
+(def ^:constant eol #"(\r\n|\n|\r)")
 
 (def p (insta/parser (slurp (io/resource "source.ebnf"))))
 
