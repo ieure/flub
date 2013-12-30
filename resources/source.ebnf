@@ -118,7 +118,7 @@ REG_ASSIGN = (REGISTER | SYMBOL) <EQ> EXPR
 (* FIXME - add to auto test, bus test, ram test, rom test, io test,
            read, write, ramp, walk, atog, dtog *)
 REPT_LOOP = ("REPT" SEP?)* "LOOP"?
-ROM_TEST = <"ROM" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "SIG" <SEP> (HEX | "*"))?
+ROM_TEST = <"ROM" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "SIG" <SEP> (EXPR | "*"))?
 RUN_UUT = <"RUN UUT"> (<AT> HEX)?
 STOP = "STOP"
 SYNC = <"SYNC" SEP> (HEX | "ADDRESS" | "DATA"| ("FREE" DASH "RUN"))
