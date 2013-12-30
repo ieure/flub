@@ -1,3 +1,6 @@
+(* © 2013 Ian Eure *)
+(* Author: Ian Eure <ian.eure@gmail.com> *)
+
 S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
      PROGRAM+
 
