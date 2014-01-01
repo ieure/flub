@@ -15,5 +15,9 @@
 (defn normalize-newlines [inp]
   (string/replace inp eol "\n"))
 
+(defn normalize [inp]
+  (-> (normalize-newlines inp)
+      (string/upper-case)))
+
 (defn source->ast [inp]
-  (p (normalize-newlines inp)))
+  (p (normalize inp)))
