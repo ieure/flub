@@ -104,4 +104,5 @@
   (string/replace inp eol "\n"))
 
 (defn parse-file [file]
-  (run hex-parser (normalize-newlines (slurp file))))
+  (remove #{[]}
+          (run hex-parser (normalize-newlines (slurp file)))))
