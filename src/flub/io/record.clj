@@ -29,41 +29,41 @@
        (into {})))
 
 (def trap
-  (let->> [mask (>> (token #{0x01}) long)
+  (let->> [mask long
            _ (eof)]
           (always [:trap (traps mask)])))
 
 
 
 (def forcing-lines-mask
-  (let->> [mask  (>> (token #{0x02}) long)
+  (let->> [mask long
            _ (eof)]
           (always [:trap-forcing-lines mask])))
 
-(defparser pboolean-value [marker kw]
-  (let->> [val (>> (token #{marker}) long)
+(defparser pboolean-value [kw]
+  (let->> [val long
            _ (eof)]
           (always [kw (= val 0x01)])))
 
-(defparser p32bit-value [marker kw]
-  (let->> [ns (>> (token #{marker}) (times 4 long))
+(defparser p32bit-value [kw]
+  (let->> [ns (times 4 long)
            _ (eof)]
           (always [kw (merge-bytes ns)])))
 
 
 
-(def beep-on-error (pboolean-value 0x03 :beep-on-error))
-(def exercise-errors (pboolean-value 0x04 :exercise-errors))
-(def bus-test-addr (p32bit-value 0x05 :bus-test-addr))
-(def run-uut-addr (p32bit-value 0x06 :run-uut-addr))
-(def stall (p32bit-value 0x07 :stall))
-(def unstall (p32bit-value 0x08 :unstall))
-(def line-size (p32bit-value 0x09 :line-size))
-(def timeout (p32bit-value 0x0A :timeout))
-(def newline (p32bit-value 0x0B :newline))
+(def beep-on-error (pboolean-value :beep-on-error))
+(def exercise-errors (pboolean-value :exercise-errors))
+(def bus-test-addr (p32bit-value :bus-test-addr))
+(def run-uut-addr (p32bit-value :run-uut-addr))
+(def stall (p32bit-value :stall))
+(def unstall (p32bit-value :unstall))
+(def line-size (p32bit-value :line-size))
+(def timeout (p32bit-value :timeout))
+(def newline (p32bit-value :newline))
 
 (def pod-name
-  (let->> [chars (>> (token #{0x0C}) (times 7 long))
+  (let->> [chars (times 7 long)
            _ (eof)]
           (always [:pod (bytes->string chars)])))
 
@@ -75,19 +75,18 @@
 (def forcing-lines-enable-mask
   (always :FIXME))
 
-(defn forcing-line-names* [marker kw]
-  (let->> [name-bytes (>> (token #{marker}) (times 28 long))
+(defn forcing-line-names* [kw]
+  (let->> [name-bytes (times 28 long)
            _ (eof)]
           (always [kw (mapv bytes->string (partition 7 name-bytes))])))
 
-(def forcing-line-names-1 (forcing-line-names* 0x0E :forcing-line-names-1))
-(def forcing-line-names-2 (forcing-line-names* 0x0F :forcing-line-names-2))
+(def forcing-line-names-1 (forcing-line-names* :forcing-line-names-1))
+(def forcing-line-names-2 (forcing-line-names* :forcing-line-names-2))
 
 
 
 (def address-descriptor
-  (let->> [_ (token #{0x19})
-           low (times 4 long)
+  (let->> [low (times 4 long)
            hi (times 4 long)
            type long
            pad (times 5 long)
@@ -103,7 +102,7 @@
                      (= type 0x03) [:rom low hi sig-or-mask])))))
 
 (def prognum
-  (let->> [n (>> (token #{0x1A}) long)
+  (let->> [n long
            _ (eof)]
           (always [:program n])))
 
@@ -218,7 +217,7 @@
           (always [:label n (merge-bytes lh)])))
 
 (def program-body
-  (let->> [b (>> sop (many instruction))
+  (let->> [b (many instruction)
            labels (>> eop (many label))]
           (always b)))
 
@@ -256,7 +255,7 @@
    0x00 eosc})
 
 (def record
-  (let->> [record-type (lookahead (token (set (keys parser-map))))]
+  (let->> [record-type (token (set (keys parser-map)))]
           (get parser-map record-type)))
 
 
