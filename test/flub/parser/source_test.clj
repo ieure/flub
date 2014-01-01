@@ -26,8 +26,7 @@
 
 (deftest test-program-head
   ;; This is invalid according to the docs
-  (is (parsed? (p/p "PROGRAM 91   207 BYTES : Frequency - in Utilities.bin" :start :PROGRAM_HEAD)))
-  (is (parsed? (p/p "PROGRAM delay" :start :PROGRAM_HEAD))))
+  (is (pp-parsed? (p/p "PROGRAM 91   207 BYTES : Frequency - in Utilities.bin" :start :PROGRAM_HEAD))))
 
 (deftest test-label-statement
   (is (parsed? (p/p "C: DPY-DATA ERROR-SENT $1-REC'D $E" :start :STATEMENT)
