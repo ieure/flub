@@ -33,4 +33,7 @@
                "Statements can follow labels")))
 
 (deftest test-write
-  (is (parsed? "WRITE @ REGF INC = REG3 AND FF" :start :WRITE)))
+  (is (parsed? (p/p "WRITE @ REGF INC = REG3 AND FF" :start :WRITE))))
+
+(deftest test-read
+  (is (parsed? (p/p "READ @ REGF INC" :start :READ))))
