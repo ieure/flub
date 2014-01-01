@@ -6,6 +6,7 @@ S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
 
 <BOL> = SEP
 <COMMENT> = "!" #".*"
+<ALT_COMMENT> = ":" #".*"
 <EOL> = SEP? COMMENT? "\n"
 
 <DASH> = ((SEP* "-" SEP*)? | " "+)
@@ -29,7 +30,8 @@ EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
 SYMBOL = #"[A-Za-z][A-Za-z0-9_]+"
 
 (* Docs say this is an EXPR rather than HEX, but that seems insane. *)
-ADDRESS_BLOCK = EXPR (<DASH> EXPR)
+ADDR = EXPR
+ADDRESS_BLOCK = ADDR (<DASH> ADDR)
 
 INCLUDE = <'INCLUDE' SEP '"'> #'[^"]+' <'"'>
 
@@ -37,7 +39,7 @@ INCLUDE = <'INCLUDE' SEP '"'> #'[^"]+' <'"'>
 
 (* Setting up *)
 
-SETUP = <"SETUP" (" INFORMATION")? EOL>
+SETUP = <BOL? "SETUP" (" INFORMATION")? EOL>
         (<BOL>? (SETUP_BEEP | SETUP_BUS_TEST | SETUP_ENABLE |
          SETUP_EXERCISE_ERRORS | SETUP_LINESIZE | SETUP_NEWLINE |
          SETUP_POD | SETUP_RUN_UUT | SETUP_STALL |
@@ -48,7 +50,7 @@ SETUP_BUS_TEST = <"BUS" (" TEST")? AT> HEX
 FORCING_LINE = "WAIT" | "RDY" | "TSC" | "DBE" | "HALT" | "BR/ACK" |
                "INTR" | "MR" | "DMA" | "UNUSED" | "READY" | "BUSRQ" | "HOLD" |
                "RQGT0" | "RQGT1"
-SETUP_ENABLE = <"ENABLE "> FORCING_LINE DASH YN
+SETUP_ENABLE = <"ENABLE" SEP> FORCING_LINE DASH YN
 SETUP_EXERCISE_ERRORS = <"EXERCISE ERRORS" DASH> YN
 SETUP_LINESIZE = <"LINESIZE" " "+> DEC
 SETUP_NEWLINE = <"NEWLINE" " "+> HEX
@@ -88,22 +90,21 @@ DECL_ASSIGN = <SEP>? "ASSIGN" <SEP> REGISTER <SEP> "TO" <SEP> (SYMBOL | (SYMBOL 
 
 (* Programs *)
 
-PROGRAM = PROGRAM_HEAD <EOL> PROGRAM_BODY
-PROGRAM_HEAD = <"PROGRAM" SEP> (DEC | SYMBOL) (<SEP> DEC <SEP> "BYTES")?
-PROGRAM_BODY = DECLARATIONS? ((<BOL>? STATEMENT <EOL>) | <EOL>)+
+PROGRAM = BOL? PROGRAM_HEAD <EOL> DECLARATIONS? PROGRAM_BODY
+PROGRAM_HEAD = <"PROGRAM" SEP> (DEC | SYMBOL) (<SEP> DEC <SEP> "BYTES")? <SEP? ALT_COMMENT?>
+PROGRAM_BODY = ((<BOL>? STATEMENT <EOL>) | <EOL>)+
 STATEMENT = (ATOG | AUTO_TEST | BUS_TEST | DISPLAY | DTOG | EXECUTE | GOTO |
              IF | INCLUDE | IO_TEST | LABEL | (LABEL <SEP> STATEMENT) | LEARN |
              READ_PROBE | RAM_TEST | RAMP | READ | REG_ASSIGN | ROM_TEST |
              RUN_UUT | STOP | SYNC | UNARY | WALK | WRITE) <(SEP REPT_LOOP)?>
 
-ATOG = <"ATOG" AT> HEX <SEP> "BIT" DEC
+ATOG = <"ATOG" AT> EXPR <SEP> "BIT" <SEP> EXPR
 AUTO_TEST = "AUTO" (" TEST")?
 (* FIXME - aux *)
 BUS_TEST = "BUS" (" TEST")?
-DISPLAY = <"DPY" (" " | "-" | "\t")> #"[A-Z0-9;@=<>'\.\?#\+\-,%\*\\/\"\$_ ]+"
-
-DTOG = <"DTOG" AT> (HEX | "CTL" | "*") <SEP>? "=" <SEP>? (EXPR | "*") <SEP>
-                   "BIT" <SEP> (EXPR | "*")
+DISPLAY = <"DPY" (" " | "-" | "\t")> #"[A-Z0-9;@=<>'\.\?#\+\-,%\*\\/\"\$_ ]*"
+DTOG = <"DTOG" AT> (((ADDR | "*") EQ (EXPR | "*")) |
+                     "CTL" EQ (EXPR | "*")) <SEP> "BIT" <SEP> (EXPR | "*")
 EXECUTE = <("EXECUTE" | "EX") (SEP "PROGRAM")? SEP> (DEC | SYMBOL)
 GOTO = <"GOTO" SEP> (HEX | SYMBOL)
 IF = <"IF" SEP> EXPR SEP? (">" | "=" | ">=") SEP? EXPR <SEP> GOTO
@@ -112,18 +113,17 @@ LABEL = (HEX | SYMBOL) <":"> <(SEP? "LABEL" SEP (HEX | SYMBOL))>?
 LEARN = <"LEARN"> (<AT> ADDRESS_BLOCK)?
 READ_PROBE = <("READ" | "RD") SEP "PROBE">
 RAM_TEST = <"RAM"> (<SEP> ("SHORT" | "LONG"))? (<AT> ADDRESS_BLOCK)?
-RAMP = <"RAMP" AT> (HEX | "*")
-READ = <("READ" | "RD") AT> (HEX | REGISTER | "*" | "STS")
+RAMP = <"RAMP" AT> (ADDR | "*")
+READ = <("READ" | "RD") AT> (ADDR | "*" | "STS")
 REG_ASSIGN = (REGISTER | SYMBOL) <EQ> EXPR
 (* FIXME - add to auto test, bus test, ram test, rom test, io test,
            read, write, ramp, walk, atog, dtog *)
 REPT_LOOP = ("REPT" SEP?)* "LOOP"?
 ROM_TEST = <"ROM" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "SIG" <SEP> (EXPR | "*"))?
-RUN_UUT = <"RUN UUT"> (<AT> HEX)?
+RUN_UUT = <"RUN UUT"> (<AT> EXPR)?
 STOP = "STOP"
 SYNC = <"SYNC" SEP> (HEX | "ADDRESS" | "DATA"| ("FREE" DASH "RUN"))
 UNARY = ("CPL" | "DEC" | "INC" | "SHL" | "SHR") <SEP> (REGISTER | SYMBOL)
-WALK = <"WALK" AT> (HEX | "*") EQ (EXPR | "*")
-(* Docs say WRITE can target an address or `*', but source in the wild
-   has registers. *)
-WRITE = <("WRITE" | "WR") AT> (HEX | REGISTER | "CTL" | "*") <SEP>? "=" <SEP>? (EXPR | "*")
+WALK = <"WALK" AT> (ADDR | "*") EQ (EXPR | "*")
+WRITE = <("WRITE" | "WR") AT> (((ADDR | "*") EQ (EXPR | "*")) |
+                               ("CTL" EQ (EXPR | "*")))
