@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013 Buster Marx, Inc All rights reserved.
+;; © 2013, 2014 Buster Marx, Inc All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.record
@@ -212,26 +212,15 @@
   (let->> [i (token (set (keys program-table)))]
           (get program-table i)))
 
-(defn program-body*
-  ([] (program-body* []))
-  ([acc]
-     (fn [state cok cerr eok eerr]
-       (let->> [i (either instruction eop)]
-               (if (eop? i)
-                 (always (vec acc))
-                 (Continue. #((program-body* (concat acc (get program-table i)))
-                              state cok cerr eok eerr)))))))
-
 (def label
   (let->> [n long
            lh (times 2 long)]
           (always [:label n (merge-bytes lh)])))
 
 (def program-body
-  (let->> [b (program-body*)
-           end (token #{0x50})
-           labels (many label)]
-          (always nil)))
+  (let->> [b (>> sop (many instruction))
+           labels (>> eop (many label))]
+          (always b)))
 
 (def eosc (always nil))
 
