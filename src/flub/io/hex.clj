@@ -1,12 +1,13 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013 Ian Eure.
+;; © 2013, 2014 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.hex
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron])
-  (:import [the.parsatron ParseError Continue]))
+  (:import [the.parsatron ParseError Continue])
+  (:require [clojure.string :as string]))
 
 (defn checksum "Compute a simple checksum of bytes."
   [bytes] (-> (reduce + bytes) (unchecked-remainder-int 256)))
@@ -97,5 +98,10 @@
 (defn str->bytes [^String s]
   (run multi-or-single-line-record s))
 
+(def ^:constant eol #"(\r\n|\n|\r)")
+
+(defn normalize-newlines [inp]
+  (string/replace inp eol "\n"))
+
 (defn parse-file [file]
-  (run hex-parser (slurp file)))
+  (run hex-parser (normalize-newlines (slurp file))))
