@@ -26,7 +26,7 @@
 
 (deftest test-program-head
   ;; This is invalid according to the docs
-  (is (pp-parsed? (p/p "PROGRAM 91   207 BYTES : Frequency - in Utilities.bin" :start :PROGRAM_HEAD))))
+  (is (parsed? (p/p "PROGRAM 91   207 BYTES : Frequency - in Utilities.bin" :start :PROGRAM_HEAD))))
 
 (deftest test-label-statement
   (is (parsed? (p/p "C: DPY-DATA ERROR-SENT $1-REC'D $E" :start :STATEMENT)
@@ -37,3 +37,8 @@
 
 (deftest test-read
   (is (parsed? (p/p "READ @ REGF INC" :start :READ))))
+
+(deftest test-read
+  (is (parsed-to [:READ [:ADDR [:EXPR [:TERM [:REGISTER "F"]
+                                       [:TERM_UNOP "INC"]]]]]
+                 (p/p "READ @ REGF INC" :start :READ))))

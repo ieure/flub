@@ -17,3 +17,18 @@
                    :actual (insta/get-failure res#)})
        (do-report {:type :pass :message ~msg}))
      (not failed?#)))
+
+(defmethod assert-expr 'parsed-to [msg [_ expected form]]
+  `(let [res# ~form
+         failed?# (insta/failure? res#)]
+     (cond
+      failed?# (do-report {:type :fail
+                           :message ~msg
+                           :actual (insta/get-failure res#)})
+
+      (not= ~expected res#) (do-report {:type :fail
+                                        :message ~msg
+                                        :expected ~expected
+                                        :actual res#})
+
+      true (do-report {:type :pass :message ~msg}))))
