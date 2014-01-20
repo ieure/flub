@@ -29,6 +29,8 @@ EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
 
 SYMBOL = #"[A-Za-z][A-Za-z0-9_]+"
 
+STRING = #"[A-Z0-9;@=<>'\.\?#\+\-,%\*\\/\"\$_ ]*"
+
 (* Docs say this is an EXPR rather than HEX, but that seems insane. *)
 ADDR = EXPR
 ADDRESS_BLOCK = ADDR (<DASH> ADDR)
@@ -98,11 +100,13 @@ STATEMENT = (ATOG | AUTO_TEST | BUS_TEST | DISPLAY | DTOG | EXECUTE | GOTO |
              READ_PROBE | RAM_TEST | RAMP | READ | REG_ASSIGN | ROM_TEST |
              RUN_UUT | STOP | SYNC | UNARY | WALK | WRITE) <(SEP REPT_LOOP)?>
 
+(* Identical to DISPLAY *)
+AUX = <"AUX" (" " | "-" | "\t")> STRING
 ATOG = <"ATOG" AT> EXPR <SEP> "BIT" <SEP> EXPR
 AUTO_TEST = "AUTO" (" TEST")?
 (* FIXME - aux *)
 BUS_TEST = "BUS" (" TEST")?
-DISPLAY = <"DPY" (" " | "-" | "\t")> #"[A-Z0-9;@=<>'\.\?#\+\-,%\*\\/\"\$_ ]*"
+DISPLAY = <"DPY" (" " | "-" | "\t")> STRING
 DTOG = <"DTOG" AT> (((ADDR | "*") EQ (EXPR | "*")) |
                      "CTL" EQ (EXPR | "*")) <SEP> "BIT" <SEP> (EXPR | "*")
 EXECUTE = <("EXECUTE" | "EX") (SEP "PROGRAM")? SEP> (DEC | SYMBOL)
