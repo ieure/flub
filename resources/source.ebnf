@@ -23,7 +23,7 @@ REGISTER = <"REG" " "*> #"[0-9A-F]"
 
 TERM_UNOP = ("CPL" | "DEC" | "INC" | "SHR" | "SHL") (<SEP> DEC)?
 
-TERM = (HEX | DEC | REGISTER) (<SEP> TERM_UNOP)*
+TERM = (DEC | HEX | REGISTER) (<SEP> TERM_UNOP)*
 
 EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
 
