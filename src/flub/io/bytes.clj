@@ -21,7 +21,7 @@
 (defn offsets [split len]
   (range 0 len split))
 
-(defn bytes->pretty
+(defn bytes->pretty "Pretty-print bytes"
   ([bytes] (bytes->pretty bytes default-split))
   ([bytes split]
      (->>
@@ -29,8 +29,7 @@
       (interleave (offsets split (count bytes)))
       (partition 2)
       (map bytes->pretty*)
-      (join "\n" ))
-     ))
+      (join "\n"))))
 
 (defn- merge-bytes* "Merge a series of 8-bit values" [bytes]
   (reduce
@@ -60,11 +59,11 @@
 
  ;; Strings
 
-(defn- byte->7bit [byte]
-  (bit-and 2r01111111 byte))
+(defn- byte->7bit "Strip the high bit from a byte"
+  [byte] (bit-and 2r01111111 byte))
 
-(defn ^String bytes->string [bytes]
-  (->> (map byte->7bit bytes)
-       (take-while #(> % 0))
-       (map clojure.core/char)
-       (apply str)))
+(defn ^String bytes->string "Turn a Fluke string into a native string"
+  [bytes] (->> (map byte->7bit bytes)
+               (take-while #(> % 0))
+               (map clojure.core/char)
+               (apply str)))
