@@ -28,14 +28,14 @@
        (map (fn [[mask kw]] [kw (= mask (bit-and bits mask))]))
        (into {})))
 
-(def trap
+(def trap "Parse trap error mask."
   (let->> [mask long
            _ (eof)]
           (always [:trap (traps mask)])))
 
 
 
-(def forcing-lines-mask
+(def forcing-lines-mask "Parse forcing lines mask."
   (let->> [mask long
            _ (eof)]
           (always [:trap-forcing-lines mask])))
@@ -86,11 +86,11 @@
 
 
 (def address-descriptor
-  (let->> [low (times 4 long)
-           hi (times 4 long)
-           type long
+  (let->> [low (times 4 long)           ; 4 byte start address
+           hi (times 4 long)            ; ~~~~~~ end   ~~~~~~~
+           type long                    ; RAM, ROM, or IO
            pad (times 5 long)
-           sig-or-mask (times 4 long)
+           sig-or-mask (times 4 long)   ; ROM sig or IO mask
            _ (eof)]
           (let [low (merge-bytes low)
                 hi (merge-bytes hi)
@@ -225,7 +225,10 @@
 
 
 
-(def parser-map
+(def record-parsers
+  "Map of hex code to record parser.
+
+   See Fluke 9010A Programming Manual, p. 7-2 & table 7-1."
   {0x01 trap
    0x02 forcing-lines-mask
    0x03 beep-on-error
