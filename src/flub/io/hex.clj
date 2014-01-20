@@ -98,11 +98,6 @@
 (defn str->bytes [^String s]
   (run multi-or-single-line-record s))
 
-(def ^:constant eol #"(\r\n|\n|\r)")
-
-(defn normalize-newlines [inp]
-  (string/replace inp eol "\n"))
-
 (defn parse-file [file]
   (remove #{[]}
           (run hex-parser (normalize-newlines (slurp file)))))
