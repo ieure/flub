@@ -1,9 +1,9 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013 Buster Marx, Inc All rights reserved.
+;; © 2013, 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.io.bytes
+(ns flub.io.bytes "Byte-level utils: conversion, checksums, printing"
   (:use [clojure.string :only [join]]))
 
 (def ^:const pretty-format "%02X")
@@ -54,6 +54,9 @@
 (defn split-bytes "Turn an n-bit Long into a series of 8-bit Ints"
   [^Long value] ;; FIXME - implement this
   )
+
+(defn checksum "Compute a simple checksum of bytes."
+  [bytes] (-> (reduce + bytes) (unchecked-remainder-int 256)))
 
  ;; Strings
 

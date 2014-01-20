@@ -8,7 +8,7 @@
   (:refer-clojure :exclude [char comment])
   (:use [the.parsatron]
         [flub.io.ws :only [normalize-newlines]]
-        [flub.io.checksum])
+        [flub.io.bytes :only [checksum]])
   (:import [the.parsatron ParseError Continue]))
 
 
