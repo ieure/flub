@@ -1,9 +1,9 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013, 2014 Buster Marx, Inc All rights reserved.
+;; © 2013, 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.record-io-test
+(ns flub.io.record-test
   (:use [clojure.test]
         [clojure.pprint]
         [the.parsatron :only [run]])
