@@ -4,13 +4,12 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.hex
+  "Read Fluke hex files into binary."
   (:refer-clojure :exclude [char comment])
-  (:use [the.parsatron])
-  (:import [the.parsatron ParseError Continue])
-  (:require [clojure.string :as string]))
-
-(defn checksum "Compute a simple checksum of bytes."
-  [bytes] (-> (reduce + bytes) (unchecked-remainder-int 256)))
+  (:use [the.parsatron]
+        [flub.io.ws :only [normalize-newlines]]
+        [flub.io.checksum])
+  (:import [the.parsatron ParseError Continue]))
 
 
 
@@ -41,6 +40,7 @@
 (def record-bytes (>> (token #{\:}) (many1 hex-byte)))
 
 (def single-line-record
+  "Parse a single-line record."
   (let->> [bytesum record-bytes
            _ (>> (either (eof) (char \newline)))]
           (let [bytes (butlast bytesum)
@@ -86,6 +86,7 @@
 
 
 (def multi-or-single-line-record
+  "Parse a multi-line or single-line record of hex."
   (let->> [mult? multi?]
           (if mult? (multi-line-record)
               single-line-record)))
@@ -96,8 +97,11 @@
  ;; User serviceable parts
 
 (defn str->bytes [^String s]
-  (run multi-or-single-line-record s))
+  "Parse a string of Fluke hex into a sequence of record bytes"
+  (->> (normalize-newlines s)
+       (run multi-or-single-line-record)
+       (remove #{[]})))
 
-(defn parse-file [file]
-  (remove #{[]}
-          (run hex-parser (normalize-newlines (slurp file)))))
+(defn file->bytes [file]
+  "Parse a file of Fluke hex into a sequence of record bytes."
+   (str->bytes  (slurp file)))
