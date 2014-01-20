@@ -9,11 +9,14 @@
             [clojure.string :as string])
   (:use [flub.io.ws]))
 
-(def p (insta/parser (slurp (io/resource "source.ebnf"))))
+(def p "Fluke source parser"
+  (insta/parser (slurp (io/resource "source.ebnf"))))
 
-(defn normalize [inp]
+(defn ^String normalize
+  "Normalize a source input string."
+  [^String inp]
   (-> (normalize-newlines inp)
       (string/upper-case)))
 
-(defn source->ast [inp]
-  (p (normalize inp)))
+(defn source->ast "Parse input and return an AST"
+  [^String inp] (p (normalize inp)))
