@@ -254,9 +254,9 @@
    0x53 program-body
    0x00 eosc})
 
-(def record
-  (let->> [record-type (token (set (keys parser-map)))]
-          (get parser-map record-type)))
+(def record "Parse a hex record"
+  (let->> [record-type (token (set (keys record-parsers)))]
+          (get record-parsers record-type)))
 
 
 
