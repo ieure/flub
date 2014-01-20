@@ -128,7 +128,7 @@ ROM_TEST = <"ROM" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "SIG" <SEP> (EXPR | "
 RUN_UUT = <"RUN UUT"> (<AT> EXPR)?
 STOP = "STOP"
 SYNC = <"SYNC" SEP> (HEX | "ADDRESS" | "DATA"| ("FREE" DASH "RUN"))
-UNARY = ("CPL" | "DEC" | "INC" | "SHL" | "SHR") <SEP> (REGISTER | SYMBOL)
+UNARY = ("CPL" | "DEC" | "INC" | "SHL" | "SHR") <SEP> (SYMBOL | REGISTER)
 WALK = <"WALK" AT> (ADDR | "*") EQ (EXPR | "*")
 WRITE = <("WRITE" | "WR") AT> (((ADDR | "*") EQ (EXPR | "*")) |
                                ("CTL" EQ (EXPR | "*")))
