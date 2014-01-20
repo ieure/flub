@@ -1,5 +1,6 @@
-(* © 2013 Ian Eure *)
+(* © 2013, 2014 Ian Eure *)
 (* Author: Ian Eure <ian.eure@gmail.com> *)
+(* Created from descriptions in "Fluke 9010A Language Compiler," p/n 661504 *)
 
 S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
      PROGRAM+
