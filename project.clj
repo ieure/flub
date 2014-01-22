@@ -1,4 +1,4 @@
-(defproject flub "0.1.0-SNAPSHOT"
+(defproject flub "0.1.1-SNAPSHOT"
   :description "The Fluke Utility Box"
   :url "http://github.com/ieure/flub"
   :license {:name "Eclipse Public License"
