@@ -222,5 +222,19 @@
 
  ;; User-servicable parts
 
+(defn- make-label-table
+  "Make a table of labels and indexes into the program bytes.
+
+   Offsets point at the next step AFTER the label, relative to the
+   start of the program, including the 0x53 SOP marker.
+   See 9010A Programming Manual p. 7-6."
+  ([bytes] (make-label-table [] 1 bytes))
+  ([table i bytes]
+     (match [bytes]
+            [(a :guard empty?)] table
+            [([43 n & rest] :seq)] (recur (conj table [n (+ 1 i)])
+                                          (+ i 2) rest)
+            :else (recur table (+ i 1) (rest bytes)))))
+
 (defn ast->bytes "Emit bytes for an AST."
   [ast] (emit ast))

@@ -145,3 +145,9 @@
   (is (= [0x1A                          ; Program start
           0x00]                         ; #0
          (a/emit {:progs ["BLIT"]} [:PROGRAM_HEAD [:SYMBOL "BLIT"]]))))
+
+(deftest test-make-label-table
+  ;; Example from 9010A Programming Manual p. 7-6.
+  (is (= [[1 7]] (make-label-table
+                  [0x53 0x1F 0x01 0x01 0x1C 0x2B 0x01 0x1F 0x03 0x04
+                   0x1C 0x50]))))
