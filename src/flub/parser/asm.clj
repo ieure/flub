@@ -20,7 +20,45 @@
 (defn vcc "Concatenates & flattens its arguments."
   [& seqs] (vec (flatten seqs)))
 
-(defn resolve [tbl s]
+
+;; Scanning for & resolving program names & labels
+;;
+;; Fluke source has two kinds of symbols: Program names and
+;; labels. Labels are visible only within the scope of the program
+;; containing them, while programs are visible to all other programs
+;; in the same source file.
+;;
+;; Symbols must be resolved to numeric values, and programs must be
+;; emitted in numeric order. Mixing numeric and symbolic program
+;; identifiers will probably blow up pretty spectacularly.
+;;
+;; Symbol tables are vectors of strings; the string is the symbol from
+;; the source. Resolving a symbol returns the index of the symbol in
+;; its vector. This is horribly inefficient, but given the small
+;; tables, it's probably not worth improving at this time.
+
+(defn scan-prognames "Scan for program names in ast."
+  [ast]
+  (let [defs (transient []), uses (transient [])]
+    (prewalk #(do (match % [:PROGRAM_HEAD [:SYMBOL s]] (conj! defs s)
+                           [:EXECUTE [:SYMBOL s]]      (conj! uses s)
+                           :else nil) %) ast)
+    {:defs (persistent! defs)
+     :uses (persistent! uses)}))
+
+(defn scan-labels "Scan for labels in ast."
+  [ast]
+  (let [defs (transient []), uses (transient [])]
+    (prewalk #(do (match % [:LABEL [:SYMBOL s]] (conj! defs s)
+                           [:GOTO [:SYMBOL s]]  (conj! uses s)
+                           :else nil) %) ast)
+    {:defs (persistent! defs)
+     :uses (persistent! uses)}))
+
+;; Resolving symbols
+
+(defn resolve "Resolve symbol s in symtable tbl."
+  [tbl s]
   (let [n (.indexOf (or tbl []) s)]
     (if (< n 0)
       (throw (NoSuchFieldException.
@@ -38,43 +76,6 @@
   (match label
          [:SYMBOL s] (resolve labels s)
          :else (emit state label)))
-
-
-
-(defn progname "Extract program name" [prog-ast]
-  (->> (map #(match % [:PROGRAM_HEAD [:SYMBOL s]] s :else nil) prog-ast)
-       (drop-while nil?)
-       (first)))
-
-(defn- scan-prognames* [defs uses elt]
-  (match elt
-         [:PROGRAM_HEAD [:SYMBOL s]] (conj! defs s)
-         [:EXECUTE [:SYMBOL s]]      (conj! uses s)
-         :else nil)
-  elt)
-
-(defn scan-prognames [ast]
-  (let [defs (transient [])
-        uses (transient [])]
-    (prewalk #(scan-prognames* defs uses %) ast)
-    {:defs (persistent! defs)
-     :uses (persistent! uses)}))
-
- ;; Labels
-
-(defn- scan-labels* [defs uses elt]
-  (match elt
-         [:LABEL [:SYMBOL s]] (conj! defs s)
-         [:GOTO [:SYMBOL s]]  (conj! uses s)
-         :else nil)
-  elt)
-
-(defn scan-labels [ast]
-  (let [defs (transient [])
-        uses (transient [])]
-    (prewalk #(scan-labels* defs uses %) ast)
-    {:defs (persistent! defs)
-     :uses (persistent! uses)}))
 
 
 ;; Emitting bytes
@@ -107,10 +108,6 @@
 ;; For cases where no state is passed in
 (defmethod emit :stateless [ast]
   (emit no-state ast))
-
-(defmacro with-thunk [& body]
-  `(macrolet [(~'thunk [ast#] `(emit ~'state ~ast#))]
-             ~@body))
 
 (defmacro defemit "Define an AST emitter."
   [kw args & body]
