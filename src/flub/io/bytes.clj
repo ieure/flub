@@ -67,3 +67,15 @@
                (take-while #(> % 0))
                (map clojure.core/char)
                (apply str)))
+
+(defn string->bytes
+  "Turn a native string into a Fluke string
+
+  \"The ASCII characters in Displkay and AUX I/F steps have the usual
+  ASCII codes, except that the eighth but it always a one. For
+  example, the ASCII code for \"A\" is 41, so in a Display or Aux I/F
+  step it would appear as C1\"
+  - Fluke 9010A Programming Manual p. 7-6"
+  [^String s]
+
+  (mapv #(bit-or 2r10000000 (int %)) s))
