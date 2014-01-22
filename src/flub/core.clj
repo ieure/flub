@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013 Buster Marx, Inc All rights reserved.
+;; © 2013, 2014 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.core
@@ -29,7 +29,7 @@
 
 (defn dc [files]
   (doseq [file files]
-    (pprint (bytes->records (hex/parse-file file))))
+    (pprint (bytes->records (hex/file->bytes file))))
   0)
 
  ;; Commands
