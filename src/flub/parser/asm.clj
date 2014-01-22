@@ -147,22 +147,22 @@
   (vcc (k/keys (get unop-map op))
        (emit state target)))
 
-(defemit :DISPLAY [state [d sast]]
+(defemit :DISPLAY [state [d dstr]]
   (vcc (k/key 'displ)
-       (emit state sast)))
+       (emit state dstr)))
 
 (defemit :STRING [state [s sval]]
   ;; FIXME - need to replace symbol names
   (string->bytes sval))
 
-(defemit :GOTO [{:keys [labels] :as state} [g label]]
+(defemit :GOTO [state [g label]]
   (vcc (k/key 'goto)
        (resolve-label state label)))
 
 ;; The start of the source scans for progam symbols and pushes them
 ;; into the state
 (defemit :S [state [s & rest]]
-  (map (partial emit (assoc state :progs (:defs (scan-prognames rest))))
+  (mapcat (partial emit (assoc state :progs (:defs (scan-prognames rest))))
        rest))
 
 ;; The start of a program scans for progam labels and pushes them into
