@@ -9,9 +9,6 @@
   (:require [flub.parser.asm :as a]
             [flub.parser.source :as s]))
 
-#_(defonce ast
-    (s/source->ast (slurp "/Users/ieure/Dropbox/arcade/fluke/blit.s")))
-
 (defonce ast
   [:S
    [:PROGRAM
@@ -100,10 +97,6 @@
   (is (= [1 2 3 4] (a/vcc [1 2] [3 4])))
   (is (= [1 2 3 4] (a/vcc 1 2 [3 4])))
   (is (= [1 2 3 4] (a/vcc '(1 2) [3 4]))))
-
-(deftest test-scan-progs
-  (is (= [[:PROGRAM 'A] [:PROGRAM 'B]]
-         (a/scan-progs [:S [:PROGRAM 'A] [:THING] [:PROGRAM 'B]]))))
 
 (deftest test-ast->bytes
   (pprint (a/ast->bytes ast3)))

@@ -41,10 +41,6 @@
 
 
 
-(defn scan-progs "Extract programs from AST"
-  [ast]
-  (filterv #(match % [:PROGRAM & p] p :else nil) ast))
-
 (defn progname "Extract program name" [prog-ast]
   (->> (map #(match % [:PROGRAM_HEAD [:SYMBOL s]] s :else nil) prog-ast)
        (drop-while nil?)
