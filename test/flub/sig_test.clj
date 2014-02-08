@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013 Buster Marx, Inc All rights reserved.
+;; © 2013, 2014 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.sig-test
@@ -8,7 +8,7 @@
   (:require [flub.sig :as s]))
 
 (deftest test-simple-sig
-  (is (= 0x4660 (s/signature [1 2 3 4 5]))))
+  (is (= 0x4660 (s/sign [1 2 3 4 5]))))
 
 (deftest test-shiftbits
   (is (= 2r00000000 (s/shiftbits 2r00000000)))
