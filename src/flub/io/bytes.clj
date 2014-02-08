@@ -78,4 +78,4 @@
   - Fluke 9010A Programming Manual p. 7-6"
   [^String s]
 
-  (mapv #(bit-or 2r10000000 (int %)) s))
+  (conj (mapv #(bit-or 2r10000000 (int %)) s) 0))
