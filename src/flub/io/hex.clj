@@ -6,7 +6,6 @@
 (ns flub.io.hex "Parse and generate Fluke format hex."
   (:refer-clojure :exclude [chunk])
   (:use [flub.io.bytes :only [checksum]]
-        [flub.io.lines :only [line-seq-n]]
         [clojure.core.match :only [match]])
   (:require [clojure.string :as string]
             [clojure.java.io :as io])
