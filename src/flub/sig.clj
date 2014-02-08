@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013 Ian Eure.
+;; © 2013, 2014 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.sig
@@ -24,8 +24,14 @@
 
 (defmulti sign "Return the Fluke signature of the input." type)
 
-(defmethod sign "[B" [^bytes bytes]
+(defmethod sign (Class/forName "[B") [^bytes bytes]
   (sign (ByteBuffer/wrap bytes)))       ; Wrap byte arrays in ByteBuffer
+
+(defmethod sign clojure.lang.PersistentVector [bytes]
+  (->> (map byte bytes)
+       (byte-array)
+       (ByteBuffer/wrap)
+       (sign)))
 
 (defmethod sign ByteBuffer [^ByteBuffer bytes]
   (let [l (.capacity bytes)

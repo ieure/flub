@@ -5,10 +5,17 @@
 ;;
 (ns flub.sig-test
   (:use [clojure.test])
-  (:require [flub.sig :as s]))
+  (:require [flub.sig :as s])
+  (:import [java.nio ByteBuffer]))
 
 (deftest test-simple-sig
-  (is (= 0x4660 (s/sign [1 2 3 4 5]))))
+  (testing "Vectors"
+    (is (= 0x4660 (s/sign [1 2 3 4 5]))))
+  (testing "Byte arrays"
+    (is (= 0x4660 (s/sign (byte-array (map byte [1 2 3 4 5]))))))
+  (testing "ByteBuffers"
+    (is (= 0x4660 (s/sign (ByteBuffer/wrap (byte-array (map byte [1 2 3 4 5]))))))))
+
 
 (deftest test-shiftbits
   (is (= 2r00000000 (s/shiftbits 2r00000000)))
