@@ -1,93 +1,155 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013, 2014 Ian Eure
+;; © 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.hex-test
-  (:use [clojure.test]
-        [the.parsatron :only [run]])
-  (:require [flub.io.hex :as hex]))
+  (:use [clojure.test])
+  (:require [flub.io.hex :as h])
+  (:import [java.io IOException StringReader]))
 
-(deftest test-single-line-record
-  (is (= [1 231] (run hex/single-line-record ":01E7E8")))
-  ;; With newline
-  (is (= [1 231] (run hex/single-line-record ":01E7E8
-")))
+ ;; Utility code
 
-  ;; Throws for invalid start char
-  (is (thrown? RuntimeException (run hex/single-line-record "01E7E8")))
+(deftest test-split-str-at
+  (is (= ["12" "34"] (h/split-str-at 2 "1234")))
+  (is (= ["123" "4567"] (h/split-str-at 3 "1234567")))
+  (is (= ["" "1234567"] (h/split-str-at 0 "1234567")))
+  (is (thrown? java.lang.StringIndexOutOfBoundsException (h/split-str-at 99 "1234567"))))
 
-  ;; Throws for invalid checksum
-  (is (thrown? RuntimeException (run hex/single-line-record ":01E7E9")))
-  ;; Throws for multi-line records
-  (is (thrown? RuntimeException (run hex/single-line-record ":01E7E8*D0")))
-  (is (thrown? RuntimeException (run hex/single-line-record ":01E7E8$D0")))
+(deftest test-chunk
+  (is (= '("12" "34") (h/chunk 2 "12345")))
+  (is (= '("12" "34") (h/chunk 2 "1234")))
+  (is (= '("12") (h/chunk 2 "12"))))
 
-  ;; Parses the first of multiple lines
-  (is (= [1 231] (run hex/single-line-record ":01E7E8\nFOO BAR"))))
+
 
-(deftest test-multi-line-record
-  (is (= [1 231 232] (run (hex/multi-line-record) ":01E7E8$D0")))
+(deftest test-split-checksum
+  (is (= ["0230" "32"] (h/split-checksum "023032")))
+  (is (= ["532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E" "0A"] (h/split-checksum "532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A")))
+  (is (= ["1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00" "82"] (h/split-checksum"1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82")))
+  (is (= ["00" "00"] (h/split-checksum "00"))))
 
-  (is (= [1 231 232 1 231 232] (run (hex/multi-line-record) ":01E7E8*D0\n:01E7E8$D0")))
+(deftest test-hex->bytes
+  (is (= [0x53 0x2B 0x01 0x44 0x0E 0x01 0x00 0x1C
+          0x2B 0x02 0x20 0x04 0x00 0x04 0x00 0x1C]
+         (h/hex->bytes "532B01440E01001C2B0220040004001C"))))
 
-  (is (thrown? RuntimeException (run (hex/multi-line-record) ":01E7E8*D0\n:01E7E8*D0"))))
+(deftest test-line->bytes
+  (is (= [0x05 0x00 0x00 0xFF 0xFF]
+         (h/line->bytes ":050000FFFF03")))
+  (is (thrown? IOException (h/line->bytes ":050000FFFF04"))))
 
-(deftest test-multi?
-  (is (true? (run hex/multi? ":01E7E8*D0")))
-  (is (true? (run hex/multi? ":01E7E8$D0")))
-  (is (false? (run hex/multi? ":01E7E8"))))
+(deftest test-record->bytes
+  (is (= [0x05 0x00 0x00 0xFF 0xFF]
+         (h/record->bytes [":050000FFFF03"])))
+  (is (thrown? IOException (h/record->bytes [":050000FFFF04"]))))
 
-(deftest test-multi-or-single-line-record
-  (is (= [1 231] (run hex/multi-or-single-line-record ":01E7E8")))
-  (is (= [1 231 232] (run hex/multi-or-single-line-record ":01E7E8$D0")))
-  (is (= [1 231 232 1 231 232] (run hex/multi-or-single-line-record
-                                    ":01E7E8*D0\n:01E7E8$D0"))))
+(deftest test-eor?
+  (is (nil? (h/eor? ":532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A")))
+  (is (nil? (h/eor? ":1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82")))
+  (with-redefs [clojure.core/gensym #(fn [& _] true)]
+    (is (h/eor? ":1C2004030B0F1C380E1C340E2D3800250010300020A0082"))))
 
-(deftest test-hex-parser
-  (is (=
-       '([0x01 0xE7]
-         [0x02 0x0B]
-         [0x0D 0x0B]
-         [0x0E 0x48 0x41 0x4C 0x54 0x00 0x00 0x00 0x42 0x52 0x2F 0x41 0x43
-          0x4B 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x49 0x4E 0x54 0x52
-          0x00 0x00 0x00]
-         [0x0F 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-          0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-          0x00 0x00 0x00]
-         [0x05 0x00 0x01 0xFE 0x0F]
-         [0x06 0x00 0xF6 0x00 0x00]
-         [0x1A 0x00]
-         [0x53 0x3C 0x0A 0x44 0x0F 0x00 0x1C 0x2B 0x01 0x20 0x38 0x0F 0x1C
-          0x0F 0x0F 0x0F 0x0F 0x1C 0x39 0x2D 0x38 0x00 0x30 0x04 0x00
-          0x00 0x00 0x00 0x00 0x00 0x2E 0x01 0x2C 0x02 0x1F 0x38 0x0F
-          0x1C 0x39 0x2D 0x38 0x00 0x30 0x04 0x00 0x00 0x00 0x00 0x00
-          0x00 0x2E 0x01 0x2C 0x02 0x2C 0x03 0x2B 0x02 0x3E 0xA3 0xA4
-          0xC6 0x74 0x28 0x2C 0x03 0x2B 0x03 0x33 0x0F 0x33 0x0F 0x33
-          0x0F 0x33 0x0F 0x33 0x0F 0x33 0x0F 0x33 0x0F 0x33 0x0F 0x33
-          0x0F 0x33 0x0F 0x33 0x0F 0x33 0x0F 0x34 0x0F 0x32 0x0F 0x32
-          0x0F 0x32 0x0F 0x32 0x0F 0x32 0x0F 0x32 0x0F 0x32 0x0F 0x32
-          0x0F 0x32 0x0F 0x32 0x0F 0x32 0x0F 0x32 0x0F 0x3E 0xA4 0xC6
-          0x74 0x2D 0x38 0x0F 0x2E 0x0E 0x0F 0x0F 0x0F 0x0F 0x0F 0x0F
-          0x2C 0x04 0x2C 0x01 0x2B 0x04 0x3E 0xA3 0x74 0x3E 0xCF 0xD5
-          0xD4 0xA0 0xCF 0xC6 0xA0 0xC1 0xC4 0xC4 0xD2 0xC5 0xD3 0xD3
-          0xA0 0xD2 0xC1 0xCE 0xC7 0xC5 0x74 0x28 0x50 0x01 0x09 0x00
-          0x02 0x3A 0x00 0x03 0x44 0x00 0x04 0x8B 0x00]
-          [])
-       (run hex/hex-parser
-            ":01E7E8
-:020B0D
-:0D0B18
-:0E48414C5400000042522F41434B0000000000000000494E545200000006
-:0F000000000000000000000000000000000000000000000000000000000F
-:050001FE0F13
-:0600F60000FC
+(deftest test-hex-record?
+  (is (h/hex-record? ":1234"))
+  (is (not (h/hex-record? "1234"))))
+
+
+
+(deftest test-lines->records
+    (is (= '((":01EFF0") (":023032") (":0D303D")
+             (":532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A"
+              ":1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82")
+             (":1A001A") (":060000000006") (":00"))
+
+           (#'h/lines->records
+            [":01EFF0" ":023032" ":0D303D"
+             ":532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A"
+             "" ":1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82"
+             ":1A001A" "" "" ":060000000006" ":00"]))))
+
+(deftest test-file->records
+  (is (= '((":01EFF0") (":023032") (":0D303D")
+           (":532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A"
+            ":1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82")
+           (":1A001A") (":060000000006") (":00"))
+
+         (#'h/file->records (StringReader. ":01EFF0
+:023032
+:0D303D
+:532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A
+
+:1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82
 :1A001A
-:533C0A440F001C2B0120380F1C0F0F0F0F1C392D380030040000000000002E012C021F38*95
-:0F1C392D380030040000000000002E012C022C032B023EA3A4C674282C032B03330F330F*7E
-:330F330F330F330F330F330F330F330F330F330F340F320F320F320F320F320F320F320F*9E
-:320F320F320F320F320F3EA4C6742D380F2E0E0F0F0F0F0F0F2C042C012B043EA3743ECF*59
-:D5D4A0CFC6A0C1C4C4D2C5D3D3A0D2C1CEC7C5742850010900023A00034400048B00$99
+
+
+:060000000006
 :00
-
+")))))
+
+(deftest test-file->bytes
+  (is (= '((1 239) (2 48) (13 48)
+           (83 43 1 68 14 1 0 28 43 2 32 4 0 4 0 28 56 14 28 32 4 0 5 15
+               28 56 14 28 32 4 3 10 0 28 56 14 28 32 4 3 11 15 28 56 14
+               28 52 14 45 56 14 47 1 7 44 1 44 2 80 1 3 0 2 10 0)
+           (26 0) (6 0 0 0 0) (0))
+         (h/file->bytes (StringReader. ":01EFF0
+:023032
+:0D303D
+:532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A
+
+:1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82
+:1A001A
+
+
+:060000000006
+:00
+")))))
+
+(deftest test-str->bytes
+  (is (= '((1 239) (2 48) (13 48)
+           (83 43 1 68 14 1 0 28 43 2 32 4 0 4 0 28 56 14 28 32 4 0 5 15
+               28 56 14 28 32 4 3 10 0 28 56 14 28 32 4 3 11 15 28 56 14
+               28 52 14 45 56 14 47 1 7 44 1 44 2 80 1 3 0 2 10 0)
+           (26 0) (6 0 0 0 0) (0))
+         (h/str->bytes ":01EFF0
+:023032
+:0D303D
+:532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A
+
+:1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82
+:1A001A
+
+
+:060000000006
+:00
 "))))
+
+(deftest test-record->hex-dispatch
+  (is (= :fixed (#'h/record->hex-dispatch [1 239])))
+  (is (= :fixed (#'h/record->hex-dispatch [13 48])))
+  (is (= :variable (#'h/record->hex-dispatch [83 43 1 68]))))
+
+(deftest test-record->hex
+  (testing "Fixed length"
+    (let [bytes [13 48]
+          hex (h/record->hex bytes)
+          bytesp (h/record->bytes hex)]
+      (is (= [":0D303D"] hex))
+      (is (= bytes bytesp))))
+
+  (testing "Variable length"
+    (let [bytes '(83 43 1 68 14 1 0 28 43 2 32 4 0 4 0 28 56 14 28 32
+                    4 0 5 15 28 56 14 28 32 4 3 10 0 28 56 14 28 32 4
+                    3 11 15 28 56 14 28 52 14 45 56 14 47 1 7 44 1 44
+                    2 80 1 3 0 2 10 0)
+          hex (h/record->hex bytes)
+          bytesp (h/record->bytes hex)]
+      (is (= '(":532B01440E01001C2B0220040004001C380E1C200400050F1C380E1C2004030A001C380E*0A"
+               ":1C2004030B0F1C380E1C340E2D380E2F01072C012C0250010300020A00$82")
+             hex))
+      (is (= bytes bytesp)))))
+
+(deftest test-roundtrip
+  (let [bytes (h/file->bytes "/Users/ieure/Dropbox/Projects/flub/examples/fluke-hex/PAC.H")]
+    (is (= bytes (#'h/str->bytes (h/bytes->str bytes))))))

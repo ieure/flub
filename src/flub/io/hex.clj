@@ -1,107 +1,127 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013, 2014 Ian Eure.
+;; © 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.io.hex
-  "Read Fluke hex files into binary."
-  (:refer-clojure :exclude [char comment])
-  (:use [the.parsatron]
-        [flub.io.ws :only [normalize-newlines]]
-        [flub.io.bytes :only [checksum]])
-  (:import [the.parsatron ParseError Continue]))
+(ns flub.io.hex "Parse and generate Fluke format hex."
+  (:refer-clojure :exclude [chunk])
+  (:use [flub.io.bytes :only [checksum]]
+        [flub.io.lines :only [line-seq-n]]
+        [clojure.core.match :only [match]])
+  (:require [clojure.string :as string]
+            [clojure.java.io :as io])
+  (:import [java.text ParseException]
+           [java.io IOException StringReader]))
+
+(defn split-str-at "Split string s at position n.
+                    Returns [head-str tail-str]"
+  [n ^String s] [(subs s 0 n) (subs s n)])
+
+(defn chunk
+  "Chunk string into a seq of sz-char-long strings.
+   ex: (chunk 2 \"012345\") -> (\"01\" \"23\" \"45\")"
+  [sz ^String s]
+  (lazy-seq
+   (when-not (or (string/blank? s) (< (count s) sz))
+     (let [[head tail] (split-str-at 2 s)]
+       (cons head (chunk sz tail))))))
 
 
 
-(defn checksum-error "Signal a checksum error."
-  [expected actual]
-  (fn [{:keys [pos] :as state} cok cerr eok eerr]
-    (eerr (expect-error (format "checksum 0x%x, got 0x%x" expected actual) pos))))
+(defn split-checksum
+  "Return [data-bytes checksum-bytes] for a Fluke hex line."
+  [^String hex]
+  (if (= "00" hex) ["00" "00"]          ; Checksum of 0 is 0
+      ;; Multi-line records use * or $ to separate data from checksum
+      (let [[bytes sum] (string/split hex #"[\*\$]")]
+        ;; If sum was nil, the cksum is in the last two chars of the string
+        (if sum [bytes sum] (split-str-at (- (count hex) 2) hex)))))
 
-(defn- chars->long  "Convert a sequence of characters to a Long."
-  [chars base]
-  (Long/parseLong (apply str chars) base))
+(defn hex->bytes
+  "Returns byte values for a string of hex.
+   Input format is AABBCC, with AA, BB, CC each representing
+   one byte."
+  [^String hex]
+  (reduce (fn [acc bt] (conj acc (Long/parseLong bt 16))) []
+          (chunk 2 hex)))
 
-(def hex-char "Match a single hexadecimal character."
-  (either (digit) (token #{\A \B \C \D \E \F})))
+(defn line->bytes
+  "Parse a single line of Fluke hex into bytes, verifying the checksum."
+  [^String hex]
+  (let [[byte-hex sum-hex] (split-checksum (subs hex 1))
+        sum (Long/parseLong sum-hex 16)
+        bs (hex->bytes byte-hex)
+        bs-sum (checksum bs)]
+    (when-not (= sum bs-sum)
+      (throw (IOException.
+              (format "Checksum mismatch, declared sum 0x%02X does not match calculated sum 0x%02X"
+                      sum bs-sum))))
+    bs))
 
-(def hex-byte "Match a hexidecimal byte."
-  (let->> [chars (times 2 hex-char)]
-          (always (chars->long chars 16))))
+(defn record->bytes [record]
+  (mapcat line->bytes record))
 
+(defn- records->bytes [records]
+  (map record->bytes records))
 
-(defmacro enforce "Return an error on checksum mismatch."
-  [bytes cksum if-ok]
-  `(let [real-sum# (checksum ~bytes)]
-     (if (not= real-sum# ~cksum)
-       (checksum-error real-sum# ~cksum)
-       ~if-ok)))
+(defn eor?
+  "Is this the end of a record?
 
-(def record-bytes (>> (token #{\:}) (many1 hex-byte)))
+   This is used to partition the input so multi-line records are
+   grouped and an be concatenated after decoding."
+  [^String hex]
+  (if-not (> (count hex) 4) (gensym)    ; ":00", eos marker
+    (let [c (nth hex (- (count hex) 3))]
+      (when-not (#{\* \$} c) (gensym)))))
 
-(def single-line-record
-  "Parse a single-line record."
-  (let->> [bytesum record-bytes
-           _ (>> (either (eof) (char \newline)))]
-          (let [bytes (butlast bytesum)
-                cksum (last bytesum)]
-            (enforce bytes cksum (always (vec bytes))))))
+(defn hex-record? "Is this a line of hex?" [^String line] (= \: (first line)))
 
- ;; Multiline
+(defn- lines->records "Group lines into records."
+  [lines] (partition-by eor? (filter hex-record? lines)))
 
-(def ^:const multi-line-delims #{\* \$})
-(def multi? "Is the current line part of a multi-line record?"
-  (let->> [cont (lookahead (>> (char \:)
-                               (many1 (token #{\0 \1 \2 \3 \4 \5 \6
-                                               \7 \8 \9 \A \B \C \D
-                                               \E \F}))
-                               (choice (eof)
-                                       (token multi-line-delims)
-                                       (any-char))))]
-          (always (contains? multi-line-delims cont))))
+(defn- file->records "Group lines of file into records."
+  [file]
+  (lines->records (line-seq (io/reader file))))
 
-(defn cont? "Is this a continued line?" [c]
-  (= c \*))
+ ;; Hex parsing
 
-(defn multi-line-record
-  "Consume a multi-line record.
+(defn file->bytes
+  "Parse a file into bytes.
+   Returns a seq of seqs, each inner seq containing bytes from one record."
+  [file]
+  (map record->bytes (file->records file)))
 
-   These records MUST have checksums on every line. A `*' separates
-   the data bytes from the checksum bytes for all lines except the
-   last, where `$' is the separator."
-  ([] (multi-line-record nil))
+(defn str->bytes
+  "Parse a string into bytes.
+   Returns a seq of seqs, each inner seq containing bytes from one record."
+  [^String s]
+  (map record->bytes (lines->records
+                      (line-seq (io/reader (StringReader. s))))))
 
-  ([prev]
-     (fn [state cok cerr eok eerr]
-       (Continue.
-        #((let->> [bytes record-bytes
-                   sep (token multi-line-delims)
-                   cksum hex-byte
-                   _ (either (eof) (char \newline))]
-          (enforce bytes cksum
-                   (if (cont? sep) (multi-line-record (concat prev bytes))
-                       (always (vec (concat prev bytes))))))
-        state cok cerr eok eerr)))))
+ ;; Hex generating
 
-
+(defn- record->hex-dispatch [[h & _] & _]
+  (if (= 0x53 h) :variable :fixed))
 
-(def multi-or-single-line-record
-  "Parse a multi-line or single-line record of hex."
-  (let->> [mult? multi?]
-          (if mult? (multi-line-record)
-              single-line-record)))
+(defmulti record->hex record->hex-dispatch)
 
-(def hex-parser
-  (many1 multi-or-single-line-record))
+(defmethod record->hex :fixed [bytes]
+  (let [sum (checksum bytes)]
+    (->> [":" (mapv #(format "%02X" %) bytes) (format "%02X" sum)]
+         (flatten)
+         (apply str)
+         (vector))))
 
- ;; User serviceable parts
+(defmethod record->hex :variable [bytes & [len]]
+  (let [len (or len 36)
+        hunks (int (/ (count bytes) len))]
+    (for [[n hunk] (->> (partition-all len bytes)
+                        (interleave (range))
+                        (partition 2))]
+      (format ":%s%s%02X" (apply str (map #(format "%02X" %) hunk))
+              (if (= n hunks) "$" "*")
+              (checksum hunk)))))
 
-(defn str->bytes [^String s]
-  "Parse a string of Fluke hex into a sequence of record bytes"
-  (->> (normalize-newlines s)
-       (run multi-or-single-line-record)
-       (remove #{[]})))
-
-(defn file->bytes [file]
-  "Parse a file of Fluke hex into a sequence of record bytes."
-   (str->bytes  (slurp file)))
+(defn bytes->str "Return a string of hex for a sequence of record bytes."
+  [byte-records]
+  (string/join "\n" (flatten (map record->hex byte-records))))
