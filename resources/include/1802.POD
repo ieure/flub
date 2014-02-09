@@ -1,0 +1,9 @@
+!
+!  1802 pod data file - Version 1.0  
+!
+
+
+      FORCELN wait = 4
+      busadr = FFFF
+      uutadr = 0000
+

@@ -1,0 +1,11 @@
+!
+! 68000 pod data file - Version 1.0
+!
+
+
+      FORCELN halt = 0
+      FORCELN br/ack = 1
+      FORCELN intr = 3
+      busadr = 1000FFE
+      uutadr = F6000000
+

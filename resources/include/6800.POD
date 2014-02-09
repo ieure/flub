@@ -1,0 +1,11 @@
+!
+!  6800 pod data file - Version 1.0
+!
+
+
+      FORCELN tsc = 3
+      FORCELN dbe = 4
+      FORCELN halt = 5
+      busadr = 0000
+      uutadr = FFFFFFFE
+

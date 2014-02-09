@@ -1,0 +1,9 @@
+!
+!  8048 pod data file - Version 1.0
+!
+
+
+      FORCELN unused = 0
+      busadr = 1100
+      uutadr = 0000
+

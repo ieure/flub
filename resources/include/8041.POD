@@ -1,0 +1,9 @@
+!
+!  8041 pod data file - Version 1.0
+!
+
+
+      FORCELN unused = 0
+      busadr = 2000
+      uutadr = 3000
+

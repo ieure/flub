@@ -1,0 +1,11 @@
+!
+!  8088 pod data file - Version 1.0
+!
+
+
+      FORCELN ready = 0
+      FORCELN hold = 1
+      FORCELN intr = 3
+      busadr = 0000
+      uutadr = FFFF0
+

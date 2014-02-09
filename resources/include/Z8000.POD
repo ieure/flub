@@ -1,0 +1,10 @@
+!
+! Z8000 pod data file - Version 1.0
+!
+
+
+      FORCELN busreq = 4 
+      FORCELN wait = 5
+      busadr = 0800FFFE
+      uutadr = 00000000
+

@@ -1,0 +1,12 @@
+!
+!  8088MX pod data file - Version 1.0
+!
+
+
+      FORCELN ready = 0
+      FORCELN intr = 1
+      FORCELN rqgt0 = 2
+      FORCELN rqgt1 = 3
+      busadr = 0000
+      uutadr = FFFF0
+

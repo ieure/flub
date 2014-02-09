@@ -1,0 +1,11 @@
+!
+!  6809 pod data file - Version 1.0
+!
+
+
+      FORCELN halt = 1
+      FORCELN dma = 4
+      FORCELN mr = 5
+      busadr = 0000
+      uutadr = FFFFFFFE
+

@@ -1,0 +1,9 @@
+!
+!   6502 pod data file - Version 1.0
+!
+
+
+      FORCELN rdy = 5
+      busadr = 0000
+      uutadr = FFFFFFFC
+
