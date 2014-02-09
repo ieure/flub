@@ -14,4 +14,7 @@
   :warn-on-reflection true
   :aot :all
   :jvm-opts ["-Xmx1g" "-Xms1g"]
-  :main flub.core)
+  :main flub.core
+  :profiles {:dev {:resource-paths ["examples/" "resources/"]}})
+
+

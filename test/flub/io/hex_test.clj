@@ -5,7 +5,8 @@
 ;;
 (ns flub.io.hex-test
   (:use [clojure.test])
-  (:require [flub.io.hex :as h])
+  (:require [flub.io.hex :as h]
+            [clojure.java.io :as io])
   (:import [java.io IOException StringReader]))
 
  ;; Utility code
@@ -151,5 +152,51 @@
       (is (= bytes bytesp)))))
 
 (deftest test-roundtrip
-  (let [bytes (h/file->bytes "/Users/ieure/Dropbox/Projects/flub/examples/fluke-hex/PAC.H")]
+  (let [bytes (h/file->bytes (io/resource "fluke-hex/PAC.H"))]
     (is (= bytes (#'h/str->bytes (h/bytes->str bytes))))))
+
+(deftest test-known
+  (testing "68000.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/68000.H")))))
+
+  (testing "764977-1.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/764977-1.H")))))
+
+  (testing "9010TEST.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/9010TEST.H")))))
+
+  (testing "APPLE-II.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/APPLE-II.H")))))
+
+  (testing "BEAST.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/BEAST.H")))))
+
+  (testing "CLEARPIT.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/CLEARPIT.H")))))
+
+  (testing "GALAGA.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/GALAGA.H")))))
+
+  (testing "GUIDEDF.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/GUIDEDF.H")))))
+
+  (testing "ID-A-DAT.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/ID-A-DAT.H")))))
+
+  (testing "JIM.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/JIM.H")))))
+
+  (testing "JOKER.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/JOKER.H")))))
+
+  (testing "PAC.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/PAC.H")))))
+
+  (testing "POLE.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/POLE.H")))))
+
+  (testing "SA-ASYNC.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/SA-ASYNC.H")))))
+
+  (testing "Z80.H"
+    (is (seq? (h/file->bytes (io/resource "fluke-hex/Z80.H"))))))
