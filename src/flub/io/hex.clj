@@ -80,7 +80,8 @@
 
 (defn- file->records "Group lines of file into records."
   [file]
-  (lines->records (line-seq (io/reader file))))
+  (with-open [r (io/reader file)]
+    (doall (lines->records (line-seq r)))))
 
  ;; Hex parsing
 
@@ -94,8 +95,8 @@
   "Parse a string into bytes.
    Returns a seq of seqs, each inner seq containing bytes from one record."
   [^String s]
-  (map record->bytes (lines->records
-                      (line-seq (io/reader (StringReader. s))))))
+  (with-open [r (io/reader (StringReader. s))]
+    (doall (map record->bytes (lines->records (line-seq r))))))
 
  ;; Hex generating
 
