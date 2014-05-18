@@ -30,8 +30,8 @@
   (with-meta
     (->> (normalize inp)
          (p)
-         #_(pp-include))
-    {:input nil}))
+         (pp-include))
+    {:input inp}))
 
 (defn file->ast [file]
   (printf "Parsing `%s'\n" file)
