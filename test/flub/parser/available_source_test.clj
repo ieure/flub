@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013 Ian Eure.
+;; © 2013, 2014 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.available-source-test
@@ -9,114 +9,86 @@
         [flub.test-util])
   (:require [flub.parser.source :as p]))
 
-(deftest test-available-source
-  (testing "68000.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/68000.s")))))
-  (testing "9010TEST.S"
+#_(deftest test-source-issue
     (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/9010TEST.S")))))
-  ;; FIXME - known bad source
-  #_(testing "9010a-Workbook.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/9010a-Workbook.S")))))
-  (testing "APPLE-II.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/APPLE-II.S")))))
-  (testing "ASTEROID-1.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/ASTEROID-1.S")))))
-  (testing "After-Burner.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/After-Burner.s")))))
-  (testing "BURNER.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/BURNER.S")))))
-  (testing "Beast-Busters.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/Beast-Busters.s")))))
-  (testing "CHECK.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/CHECK.S")))))
-  (testing "CLEARPIT.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/CLEARPIT.S")))))
-  (testing "DELAY.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/DELAY.S")))))
-  (testing "DEMO.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/DEMO.S")))))
-  (testing "FILE01.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/FILE01.S")))))
-  (testing "FILE02.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/FILE02.S")))))
-  ;; Possible FIXME - a line containing a statement is continued on the next.
-  #_(testing "FILE03.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/FILE03.S")))))
-  (testing "FILE04.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/FILE04.S")))))
-  (testing "FILE05.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/FILE05.S")))))
-  (testing "FILE06.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/FILE06.S")))))
-  (testing "FILE07.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/FILE07.S")))))
-  (testing "GALAGA.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/GALAGA.S")))))
-  (testing "Hangon.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/Hangon.s")))))
-  (testing "ID-A-DAT.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/ID-A-DAT.s")))))
-  (testing "JIM.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/JIM.S")))))
-  (testing "JOKER.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/JOKER.S")))))
-  (testing "JOKPOK.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/JOKPOK.S")))))
-  (testing "LELAND.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/LELAND.S")))))
-  (testing "LOOPPIT.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/LOOPPIT.S")))))
-  (testing "LOOPPOLE.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/LOOPPOLE.S")))))
-  (testing "OperationWolf.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/OperationWolf.s")))))
-  (testing "PAC.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/PAC.S")))))
-  (testing "PLAY.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/PLAY.S")))))
-  (testing "PLAY5.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/PLAY5.S")))))
-  (testing "POD_TEST_6502_Rev1-0.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/POD_TEST_6502_Rev1-0.S")))))
-  (testing "POD_TEST_6800_Rev1-0.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/POD_TEST_6800_Rev1-0.S")))))
-  (testing "POD_TEST_8080_Rev1-1.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/POD_TEST_8080_Rev1-1.S")))))
-  (testing "POD_TEST_8085_Rev1_0.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/POD_TEST_8085_Rev1_0.S")))))
-  (testing "POD_TEST_Z80_Rev1-1.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/POD_TEST_Z80_Rev1-1.S")))))
-  (testing "POLE.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/POLE.S")))))
-  (testing "POT_TEST_6802_Rev1-0.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/POT_TEST_6802_Rev1-0.S")))))
-  (testing "Pac-corner-dots.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/Pac-corner-dots.s")))))
-  (testing "Pac-test.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/Pac-test.s")))))
-  (testing "RS232TST.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/RS232TST.S")))))
-  (testing "Z80-IO.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/Z80-IO.S")))))
-  (testing "Z80.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/Z80.S")))))
-  (testing "beast.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/beast.s")))))
-  ;; BINARY not supported
-  #_(testing "fluke-tape.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/fluke-tape.s")))))
-  (testing "opwolf.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/opwolf.s")))))
-  )
 
-#_(deftest test-unsupported-aux
-  (testing "9010A-TK80-Demo-Version30-Jun-81.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/9010A-TK80-Demo-Version30-Jun-81.S")))))
-  (testing "GuidedF.s"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/GuidedF.s"))))))
+(def ^:const example-dir
+  "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/")
 
-#_(deftest test-unsupported-binary
-  (testing "ASYNC.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/ASYNC.S")))))
-  (testing "Unknown tape.S"
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/Unknown tape.S"))))))
+(defmacro test-example [^String example-file]
+  `(testing ~example-file
+     (is (~'parsed? (p/include ~example-dir
+                               (p/source->ast (slurp ~(str example-dir example-file))))))))
+
+(deftest test-available-source-2
+  (p/include "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src"
+             (test-example "68000.s")
+             (test-example "9010A-TK80-Demo-Version30-Jun-81.S")
+
+             ;; ISO-8859-1 hyphens in this
+             #_(test-example "9010TEST.S")
+
+             ;; "NOTE THAT THIS NEEDS EDITING..."
+             #_(test-example "9010a-Workbook.S")
+
+             (test-example "APPLE-II.S")
+             (test-example "ASTEROID-1.S")
+
+             ;; BINARY
+             #_(test-example "ASYNC.S")
+
+             (test-example "After-Burner.s")
+             (test-example "BURNER.S")
+             (test-example "Beast-Busters.s")
+             (test-example "CHECK.S")
+             (test-example "CLEARPIT.S")
+             (test-example "DELAY.S")
+
+             ;; Legit failure, program-scoped DECLARATIONS
+             (test-example "DEMO.S")
+             (test-example "FILE01.S")
+             (test-example "FILE02.S")
+
+             ;; Line hard wrapped -- not sure how to deal
+             #_(test-example "FILE03.S")
+
+             (test-example "FILE04.S")
+             (test-example "FILE05.S")
+             (test-example "FILE06.S")
+             (test-example "FILE07.S")
+             (test-example "GALAGA.S")
+             (test-example "GuidedF.s")
+             (test-example "Hangon.s")
+             (test-example "ID-A-DAT.s")
+             (test-example "JIM.S")
+             (test-example "JOKER.S")
+             (test-example "JOKPOK.S")
+             (test-example "LELAND.S")
+             (test-example "LOOPPIT.S")
+             (test-example "LOOPPOLE.S")
+             (test-example "OperationWolf.s")
+             (test-example "PAC.S")
+             (test-example "PLAY.S")
+             (test-example "PLAY5.S")
+             (test-example "POD_TEST_6502_Rev1-0.S")
+             (test-example "POD_TEST_6800_Rev1-0.S")
+             (test-example "POD_TEST_8080_Rev1-1.S")
+             (test-example "POD_TEST_8085_Rev1_0.S")
+             (test-example "POD_TEST_Z80_Rev1-1.S")
+             (test-example "POLE.S")
+             (test-example "POT_TEST_6802_Rev1-0.S")
+             (test-example "Pac-corner-dots.s")
+             (test-example "Pac-test.s")
+             (test-example "RS232TST.S")
+
+             ;; BINARY
+             #_(test-example "Unknown tape.S")
+
+             (test-example "Z80-IO.S")
+             (test-example "Z80.S")
+             (test-example "beast.s")
+             (test-example "blit.s")
+             (test-example "blit2.s")
+             ;; BINARY
+             #_(test-example "fluke-tape.s")
+             (test-example "opwolf.s")))
