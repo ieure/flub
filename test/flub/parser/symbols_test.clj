@@ -5,7 +5,8 @@
 ;;
 (ns flub.parser.symbols-test
   (:use [clojure.test]
-        [clojure.pprint])
+        [clojure.pprint]
+        [flub.test-util])
   (:require [flub.parser.symbols :as syms]
             [flub.parser.source :as src]))
 
@@ -35,21 +36,21 @@ PROGRAM 2
     FOO = 2
     REGB = 2
 "]
-      (is (= [:S
-              [:PROGRAM
-               [:PROGRAM_HEAD [:DEC "1"]]
-               [:PROGRAM_BODY
-                ;; Both statements use REGA (= program defs override global)
-                [:STATEMENT
-                 [:REG_ASSIGN [:REGISTER "A"] [:EXPR [:TERM [:HEX "1"]]]]]
-                [:STATEMENT
-                 [:REG_ASSIGN [:REGISTER "A"] [:EXPR [:TERM [:HEX "1"]]]]]]]
-              [:PROGRAM
-               [:PROGRAM_HEAD [:DEC "2"]]
-               [:PROGRAM_BODY
-                ;; Both statements use REGB (= program defs are scoped)
-                [:STATEMENT
-                 [:REG_ASSIGN [:REGISTER "B"] [:EXPR [:TERM [:HEX "2"]]]]]
-                [:STATEMENT
-                 [:REG_ASSIGN [:REGISTER "B"] [:EXPR [:TERM [:HEX "2"]]]]]]]]
-             (syms/process (src/p code))))))
+      (is (parsed-to [:S
+                      [:PROGRAM
+                       [:PROGRAM_HEAD [:DEC "1"]]
+                       [:PROGRAM_BODY
+                        ;; Both statements use REGA (= program defs override global)
+                        [:STATEMENT
+                         [:REG_ASSIGN [:REGISTER "A"] [:EXPR [:TERM [:HEX "1"]]]]]
+                        [:STATEMENT
+                         [:REG_ASSIGN [:REGISTER "A"] [:EXPR [:TERM [:HEX "1"]]]]]]]
+                      [:PROGRAM
+                       [:PROGRAM_HEAD [:DEC "2"]]
+                       [:PROGRAM_BODY
+                        ;; Both statements use REGB (= program defs are scoped)
+                        [:STATEMENT
+                         [:REG_ASSIGN [:REGISTER "B"] [:EXPR [:TERM [:HEX "2"]]]]]
+                        [:STATEMENT
+                         [:REG_ASSIGN [:REGISTER "B"] [:EXPR [:TERM [:HEX "2"]]]]]]]]
+                     (syms/process (src/p code))))))
