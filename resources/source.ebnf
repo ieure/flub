@@ -5,7 +5,11 @@
 S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
      PROGRAM+
 
+
+
 <BOL> = SEP
+<SEP> = <(" " | "\t")+>
+
 <COMMENT> = "!" #".*"
 <ALT_COMMENT> = ":" #".*"
 <EOL> = SEP? COMMENT? "\n"
@@ -13,7 +17,6 @@ S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
 <DASH> = ((SEP* "-" SEP*)? | " "+)
 <AT> = ((SEP* "@" SEP*)? | " "+)
 <EQ> = (SEP* "=" SEP*)
-<SEP> = <(" " | "\t")+>
 
 DEC = #"[0-9]+"
 HEX = #"[0-9A-F]+"
@@ -22,18 +25,18 @@ YN = "YES" | "NO"
 
 REGISTER = <"REG" " "*> #"[0-9A-F]"
 
+(* Unary operators *)
 TERM_UNOP = ("CPL" | "DEC" | "INC" | "SHR" | "SHL") (<SEP> DEC)?
 
 TERM = (DEC | HEX | REGISTER) (<SEP> TERM_UNOP)*
-
 EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
 
 SYMBOL = #"[A-Za-z][A-Za-z0-9_]+"
 
 STRING = #"[A-Z0-9;@=<>'\.\?#\+\-,%\*\\/\"\$_ ]*"
 
-(* Docs say this is an EXPR rather than HEX, but that seems insane. *)
 ADDR = EXPR
+(* Start address, optional end *)
 ADDRESS_BLOCK = ADDR (<DASH> ADDR)
 
 INCLUDE = <'INCLUDE' SEP '"'> #'[^"]+' <'"'>
