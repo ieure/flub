@@ -14,7 +14,7 @@ HEX = #"[0-9A-F]+"
 
 STRING = #"[A-Z0-9;@=<>'\.\?#\+\-,%\*\\/\"\$_ ]*"
 
-FORCELN = <"FORCELN" SEP> FORCE_LINE EQ DEC
+FORCELN = <"FORCELN" SEP> FORCE_LINE <EQ> DEC
 BUS_ADDR = <"BUSADR" EQ> HEX
 UUT_ADDR = <"UUTADR" EQ> HEX
 
