@@ -7,7 +7,8 @@
   (:require [instaparse.core :as insta]
             [clojure.java.io :as io]
             [clojure.string :as string]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [flub.parser.pod :as pod])
   (:use [flub.io.ws]
         [clojure.pprint]
         [clojure.core.match :only [match]])
@@ -59,6 +60,9 @@
   (walk/prewalk
    (fn [form]
      (match form
-            [:INCLUDE name] (file->ast (find-include name))
+            [:INCLUDE name] (let [incf (find-include name)]
+                              (if (.endsWith (string/lower-case name) ".pod")
+                                (pod/file->ast incf)
+                                (file->ast incf)))
             :else form))
    ast))
