@@ -23,9 +23,10 @@
 
 (defn source->ast "Parse input and return an AST" [^String inp]
   (with-meta
-    (->> (normalize inp)
-         (p)
-         (pp-include))
+    (let [res (p (normalize inp))]
+      (if (insta/failure? res)
+        res
+        (pp-include res)))
     {:input inp}))
 
 (defn file->ast [file]
