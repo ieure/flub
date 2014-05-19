@@ -28,7 +28,7 @@ REGISTER = <"REG" " "*> #"[0-9A-F]"
 (* Unary operators *)
 TERM_UNOP = ("CPL" | "DEC" | "INC" | "SHR" | "SHL") (<SEP> DEC)?
 
-TERM = (DEC | HEX | REGISTER) (<SEP> TERM_UNOP)*
+TERM = (DEC | HEX | REGISTER | SYMBOL) (<SEP> TERM_UNOP)*
 EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
 
 SYMBOL = #"[A-Za-z][A-Za-z0-9_]+"
@@ -123,7 +123,7 @@ READ_PROBE = <("READ" | "RD") SEP "PROBE">
 RAM_TEST = <"RAM"> (<SEP> ("SHORT" | "LONG"))? (<AT> ADDRESS_BLOCK)?
 RAMP = <"RAMP" AT> (ADDR | "*")
 READ = <("READ" | "RD") AT> (ADDR | "*" | "STS")
-REG_ASSIGN = (REGISTER | SYMBOL) <EQ> EXPR
+REG_ASSIGN = (SYMBOL | REGISTER) <EQ> EXPR
 (* FIXME - add to auto test, bus test, ram test, rom test, io test,
            read, write, ramp, walk, atog, dtog *)
 REPT_LOOP = ("REPT" SEP?)* "LOOP"?
