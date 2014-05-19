@@ -18,7 +18,7 @@
 (defmacro test-example [^String example-file]
   `(testing ~example-file
      (is (~'parsed? (p/include ~example-dir
-                               (p/source->ast (slurp ~(str example-dir example-file))))))))
+                               (p/file->ast ~(str example-dir example-file)))))))
 
 (deftest test-available-source-2
   (p/include "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src"
