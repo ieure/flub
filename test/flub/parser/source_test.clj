@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013 Ian Eure
+;; © 2013, 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.source-test
@@ -42,3 +42,23 @@
   (is (parsed-to [:READ [:ADDR [:EXPR [:TERM [:REGISTER "F"]
                                        [:TERM_UNOP "INC"]]]]]
                  (p/p "READ @ REGF INC" :start :READ))))
+
+(deftest test-program-declarations
+  (testing "Without line breaks"
+    (let [code "PROGRAM 1
+DECLARATIONS
+    ASSIGN REGA TO FOO
+
+    REGA = 1
+"]
+      (is (parsed? (p/p code :start :PROGRAM)))))
+
+  (testing "With line breaks"
+    (let [code "PROGRAM 1
+
+DECLARATIONS
+    ASSIGN REGA TO FOO
+
+    REGA = 1
+"]
+      (is (parsed? (p/p code :start :PROGRAM))))))
