@@ -12,12 +12,12 @@
   (:use [flub.io.ws]
         [clojure.pprint]
         [clojure.core.match :only [match]])
-  (:import [java.io IOException]))
+  (:import [java.io IOException File]))
 
 (def p "Fluke source parser"
   (insta/parser (slurp (io/resource "source.ebnf"))))
 
-(declare pp-include)
+(declare include pp-include)
 
 (def ^:dynamic *stack* [])
 
@@ -39,29 +39,39 @@
 
  ;; Includes
 
+(def ^:dynamic *include-stack* "Look for include files in these directories."
+  ["."])
+
+(defmacro include
+  [dir & exprs]
+  (let [dir (if-not (coll? dir) [dir] dir)]
+    `(binding [*include-stack* (concat *include-stack* ~dir)]
+       ~@exprs)))
+
 (defn- resource-include "Find an include file in the resources."
   [name] (io/resource (str "include/" name)))
 
-(defn- pwd-include "Find an include file in the PWD." [name]
-  (let [cwdf (io/as-file (str "./" name))]
-    (when (.exists cwdf) cwdf)))
+(defn- path-include "Look for file in *include-stack*"
+  [file]
+  (->> *include-stack*
+       ;; Build a seq of Files
+       (map #(io/as-file (string/join File/separator [% file])))
+       ;; Find the first that exists
+       (filter (fn [^File f] (.exists f)))
+       (first)))
 
 (defn- find-include "Locate an include file." [name]
-  (printf "Locating include: `%s'\n" name)
-  (if-let [f (first (filter identity [(resource-include name)
-                                      (pwd-include name)]))]
-    (do
-      (printf "Found: `%s' -> `%s'\n" name f)
-      f)
-    (do
-      (printf "Failed to find: `%s'\n" name)
-      (throw (IOException. (format "Cannot find include file `%s'" name))))))
+  (if-let [f (first (filter identity [(path-include name)
+                                      (resource-include name)]))]
+    f
+    (throw (IOException. (format "Cannot find include file `%s'" name)))))
 
 (defn pp-include "Splice included files into the AST." [ast]
   (walk/prewalk
    (fn [form]
      (match form
             [:INCLUDE name] (let [incf (find-include name)]
+                              #_(printf "Including file `%s' -> `%s'\n" name incf)
                               (if (.endsWith (string/lower-case name) ".pod")
                                 (pod/file->ast incf)
                                 (file->ast incf)))

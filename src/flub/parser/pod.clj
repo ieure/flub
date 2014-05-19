@@ -25,7 +25,7 @@
     {:input inp}))
 
 (defn file->ast [file]
-  (printf "Parsing POD `%s'\n" file)
+  #_(printf "Parsing POD `%s'\n" file)
   (with-open [i (io/reader file)]
     (with-meta
       (doall (source->ast (slurp i)))
