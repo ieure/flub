@@ -28,7 +28,7 @@ REGISTER = <"REG" " "*> #"[0-9A-F]"
 (* Unary operators *)
 TERM_UNOP = ("CPL" | "DEC" | "INC" | "SHR" | "SHL") (<SEP> DEC)?
 
-TERM = (DEC | HEX | REGISTER | SYMBOL) (<SEP> TERM_UNOP)*
+TERM = (SYMBOL | DEC | HEX | REGISTER) (<SEP> TERM_UNOP)*
 EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
 
 SYMBOL = #"[A-Za-z][A-Za-z0-9_]+"
