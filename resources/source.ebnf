@@ -32,6 +32,7 @@ TERM = (DEC | HEX | REGISTER) (<SEP> TERM_UNOP)*
 EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
 
 SYMBOL = #"[A-Za-z][A-Za-z0-9_]+"
+SYMBOLS = SYMBOL <SEP? "," SEP?> (SYMBOL | SYMBOLS)
 
 STRING = #"[A-Z0-9;@=<>'\.\?#\+\-,%\*\\/\"\$_ ]*"
 
@@ -88,9 +89,8 @@ IO = <"IO" AT> ADDRESS_BLOCK <SEP> "BITS" <SEP> EXPR
 
 
 (* Declarations *)
-DECLARATIONS = <"DECLARATIONS" EOL> (DECL_ASSIGN | <EOL>)+ EOL?
-(* FIXME this is somewhat too loose - commas are optional *)
-DECL_ASSIGN = <SEP>? "ASSIGN" <SEP> REGISTER <SEP> "TO" <SEP> (SYMBOL | (SYMBOL <","? SEP?>)+)
+DECLARATIONS = <"DECLARATIONS" EOL> (DECL_ASSIGN)+ EOL?
+DECL_ASSIGN = <SEP>? <"ASSIGN"> <SEP> REGISTER <SEP> <"TO"> <SEP> (SYMBOL | SYMBOLS) <EOL>
 
 
 
