@@ -20,7 +20,7 @@
      (is (~'parsed? (p/include ~example-dir
                                (p/file->ast ~(str example-dir example-file)))))))
 
-(deftest test-available-source-2
+(deftest test-available-source
   (p/include "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src"
              (test-example "68000.s")
              (test-example "9010A-TK80-Demo-Version30-Jun-81.S")
