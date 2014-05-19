@@ -16,12 +16,6 @@
 (def p "Fluke source parser"
   (insta/parser (slurp (io/resource "source.ebnf"))))
 
-(defn ^String normalize
-  "Normalize a source input string."
-  [^String inp]
-  (-> (normalize-newlines inp)
-      (string/upper-case)))
-
 (declare pp-include)
 
 (def ^:dynamic *stack* [])
