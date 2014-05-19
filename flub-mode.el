@@ -32,9 +32,11 @@
 
     (,(format "\\b%s\\b"
               (regexp-opt '("INC" "IF" "DEC" "SIG" "RUN UUT" "SETUP"
-                    "RAM" "GOTO"
+                    "RAM" "GOTO" "EX" "EXECUTE"
                     "ROM" "IO" "POD")))
      . font-lock-keyword-face)
+
+    ("STOP" . font-lock-warning-face)
 
     ("\\bINCLUDE\\b" . font-lock-preprocessor-face)
 
@@ -52,7 +54,7 @@
 
     ("@" . font-lock-constant-face)
 
-    ("\\(!\\)+\\(.*\\)" (1 font-lock-comment-delimiter-face)
+    ("\\(!+\\)\\(.*\\)" (1 font-lock-comment-delimiter-face)
      (2 font-lock-comment-face t))
     ))
 
