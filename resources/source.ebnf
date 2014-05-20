@@ -30,7 +30,7 @@ REGISTER = <"REG" SEP?> #"[0-9A-F]"
 TERM_UNOP = ("CPL" | "DEC" | "INC" | "SHR" | "SHL") (<SEP> DEC)?
 
 TERM = (DEC | HEX | SYMBOL | REGISTER) (<SEP> TERM_UNOP)*
-EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
+EXPR = TERM (<SEP> ("AND" | "OR") <SEP> EXPR)?
 
 SYMBOL = #"[A-Za-z][A-Za-z0-9_]+"
 SYMBOLS = SYMBOL <SEP? "," SEP?> (SYMBOL | SYMBOLS)
@@ -116,7 +116,7 @@ DTOG = <"DTOG" AT> (((ADDR | "*") <EQ> (EXPR | "*")) |
                      "CTL" <EQ> (EXPR | "*")) <SEP> "BIT" <SEP> (EXPR | "*")
 EXECUTE = <("EXECUTE" | "EX") (SEP "PROGRAM")? SEP> (DEC | SYMBOL)
 GOTO = <"GOTO" SEP> (HEX | SYMBOL)
-IF = <"IF" SEP> EXPR SEP? (">" | "=" | ">=") SEP? EXPR <SEP> GOTO
+IF = <"IF" SEP> EXPR <SEP?> (">" | "=" | ">=") <SEP?> EXPR <SEP> GOTO
 IO_TEST = <"IO" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "BTS" <SEP> (EXPR | "*"))?
 LABEL = (HEX | SYMBOL) <":"> <(SEP? "LABEL" SEP (HEX | SYMBOL))>?
 LEARN = <"LEARN"> (<AT> ADDRESS_BLOCK)?
