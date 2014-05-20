@@ -14,21 +14,21 @@ S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
 <ALT_COMMENT> = ":" #".*"
 <EOL> = SEP? COMMENT? "\n"
 
-<DASH> = ((SEP* "-" SEP*)? | " "+)
-<AT> = ((SEP* "@" SEP*)? | " "+)
-<EQ> = (SEP* "=" SEP*)
+<DASH> = ((SEP? "-" SEP?)? | " "+)
+<AT> = ((SEP? "@" SEP?)? | " "+)
+<EQ> = SEP? "=" SEP?
 
 DEC = #"[0-9]+"
 HEX = #"[0-9A-F]+"
 
 YN = "YES" | "NO"
 
-REGISTER = <"REG" " "*> #"[0-9A-F]"
+REGISTER = <"REG" SEP?> #"[0-9A-F]"
 
 (* Unary operators *)
 TERM_UNOP = ("CPL" | "DEC" | "INC" | "SHR" | "SHL") (<SEP> DEC)?
 
-TERM = (SYMBOL | DEC | HEX | REGISTER) (<SEP> TERM_UNOP)*
+TERM = (DEC | HEX | SYMBOL | REGISTER) (<SEP> TERM_UNOP)*
 EXPR = TERM (SEP ("AND" | "OR") SEP EXPR)?
 
 SYMBOL = #"[A-Za-z][A-Za-z0-9_]+"
