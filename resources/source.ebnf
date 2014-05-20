@@ -15,8 +15,8 @@ S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
 <ALT_COMMENT> = ":" #".*"
 <EOL> = SEP? COMMENT? "\n"
 
-<DASH> = SEP ("-" SEP)?
-<AT> = SEP ("@" SEP)?
+<DASH> = ((SEP? "-" SEP?)? | " "+)
+<AT> = ((SEP? "@" SEP?)? | " "+)
 <EQ> = SEP? "=" SEP?
 
 DEC = #"[0-9]+"
