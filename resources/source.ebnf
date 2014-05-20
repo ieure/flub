@@ -8,7 +8,8 @@ S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
 
 
 <BOL> = SEP
-<SEP> = <(" " | "\t")+>
+
+<SEP> = #"[ \t]+"
 
 <COMMENT> = "!" #".*"
 <ALT_COMMENT> = ":" #".*"
