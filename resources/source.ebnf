@@ -15,8 +15,8 @@ S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
 <ALT_COMMENT> = ":" #".*"
 <EOL> = SEP? COMMENT? "\n"
 
-<DASH> = ((SEP? "-" SEP?)? | " "+)
-<AT> = ((SEP? "@" SEP?)? | " "+)
+<DASH> = SEP ("-" SEP)?
+<AT> = SEP ("@" SEP)?
 <EQ> = SEP? "=" SEP?
 
 DEC = #"[0-9]+"
@@ -112,8 +112,8 @@ ATOG = <"ATOG" AT> EXPR <SEP> "BIT" <SEP> EXPR
 AUTO_TEST = "AUTO" (" TEST")?
 BUS_TEST = "BUS" (" TEST")?
 DISPLAY = <"DPY" (" " | "-" | "\t")> STRING
-DTOG = <"DTOG" AT> (((ADDR | "*") EQ (EXPR | "*")) |
-                     "CTL" EQ (EXPR | "*")) <SEP> "BIT" <SEP> (EXPR | "*")
+DTOG = <"DTOG" AT> (((ADDR | "*") <EQ> (EXPR | "*")) |
+                     "CTL" <EQ> (EXPR | "*")) <SEP> "BIT" <SEP> (EXPR | "*")
 EXECUTE = <("EXECUTE" | "EX") (SEP "PROGRAM")? SEP> (DEC | SYMBOL)
 GOTO = <"GOTO" SEP> (HEX | SYMBOL)
 IF = <"IF" SEP> EXPR SEP? (">" | "=" | ">=") SEP? EXPR <SEP> GOTO
@@ -131,7 +131,7 @@ REPT_LOOP = ("REPT" SEP?)* "LOOP"?
 ROM_TEST = <"ROM" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "SIG" <SEP> (EXPR | "*"))?
 RUN_UUT = <"RUN UUT"> (<AT> EXPR)?
 STOP = "STOP"
-SYNC = <"SYNC" SEP> (HEX | "ADDRESS" | "DATA"| ("FREE" DASH "RUN"))
+SYNC = <"SYNC" SEP> (HEX | "ADDRESS" | "DATA"| "FREE-RUN")
 UNARY = ("CPL" | "DEC" | "INC" | "SHL" | "SHR") <SEP> (SYMBOL | REGISTER)
 WALK = <"WALK" AT> (ADDR | "*") EQ (EXPR | "*")
 WRITE = <("WRITE" | "WR") AT> (((ADDR | "*") EQ (EXPR | "*")) |
