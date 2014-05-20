@@ -8,7 +8,8 @@
             [clojure.java.io :as io]
             [clojure.string :as string]
             [clojure.walk :as walk]
-            [flub.parser.pod :as pod])
+            [flub.parser.pod :as pod]
+            [flub.parser.symbols :as symbols])
   (:use [flub.io.ws]
         [clojure.pprint]
         [clojure.core.match :only [match]])
@@ -26,11 +27,12 @@
     (let [res (p (normalize inp))]
       (if (insta/failure? res)
         res
-        (pp-include res)))
+        (symbols/process (pp-include res))))
     {:input inp}))
 
 (defn file->ast [file]
   (printf "Parsing `%s'\n" file)
+  (flush)
   (binding [*stack* (conj *stack* file)]
     (with-open [i (io/reader file)]
       (with-meta
@@ -73,7 +75,7 @@
             [:INCLUDE name] (let [incf (find-include name)]
                               #_(printf "Including file `%s' -> `%s'\n" name incf)
                               (if (.endsWith (string/lower-case name) ".pod")
-                                (pod/file->ast incf)
-                                (file->ast incf)))
+                                          (pod/file->ast incf)
+                                          (file->ast incf)))
             :else form))
    ast))
