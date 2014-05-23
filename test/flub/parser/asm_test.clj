@@ -7,7 +7,8 @@
   (:use [clojure.test]
         [clojure.pprint])
   (:require [flub.parser.asm :as a]
-            [flub.parser.source :as s]))
+            [flub.parser.source :as s]
+            [flub.io.recordng :as r]))
 
 (defonce ast
   [:S
