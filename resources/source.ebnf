@@ -17,7 +17,7 @@ S = (<EOL> | INCLUDE | SETUP | ADDRESS_SPACE | DECLARATIONS)*
 
 <DASH> = ((SEP? "-" SEP?)? | " "+)
 <AT> = ((SEP? "@" SEP?)? | " "+)
-<EQ> = SEP? "=" SEP?
+<EQ> = <SEP?> "=" <SEP?>
 
 DEC = #"[0-9]+"
 HEX = #"[0-9A-F]+"
