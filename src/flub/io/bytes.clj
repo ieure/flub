@@ -79,3 +79,13 @@
   [^String s]
 
   (conj (mapv #(bit-or 2r10000000 (int %)) s) 0))
+
+ ;; Bitmask lookup
+
+(defn bit-lookup
+  "Given a mask and map/vector of symbols, return a map of symbol enable states."
+  [mask syms]
+  (let [ss (if (vector? syms) (zipmap (map #(expt 2 %) (range)) syms)
+               syms)]
+    (into {} (map (fn [[smask kw]]
+                    [kw (= smask (bit-and smask mask))]) ss))))
