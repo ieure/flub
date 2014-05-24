@@ -3,12 +3,11 @@
 ;; © 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.parser.asm-test
+(ns flub.assembler.core-test
   (:use [clojure.test]
         [clojure.pprint])
-  (:require [flub.parser.asm :as a]
-            [flub.parser.source :as s]
-            [flub.io.recordng :as r]))
+  (:require [flub.assembler.core :as a]
+            [flub.io.record :as r]))
 
 (defonce ast
   [:S
@@ -100,7 +99,9 @@
   (is (= [1 2 3 4] (a/vcc '(1 2) [3 4]))))
 
 (deftest test-ast->bytes
-  (pprint (a/ast->bytes ast3)))
+  (let [bytes (a/ast->bytes ast3)]
+    (pprint bytes)
+    (pprint (r/disass bytes))))
 
 (deftest test-emit-hex
   (is (= [1 0xF 0xF 0xF] (a/emit [:HEX "1FFF"]))))
@@ -110,12 +111,12 @@
 
 (deftest test-emit-display
   (is (= [62 211 212 193 210 212 160 193 196 196 210 197 211 211 160
-          192 160 175 193]
+          192 160 175 193 0 116]
          (a/emit [:DISPLAY [:STRING "START ADDRESS @ /A"]]))))
 
 (deftest test-emit-display-statement
   (is (= [[62 211 212 193 210 212 160 193 196 196 210 197 211 211 160
-          192 160 175 193]]
+          192 160 175 193 0 116]]
          (a/emit [:STATEMENT [:DISPLAY [:STRING "START ADDRESS @ /A"]]]))))
 
 (deftest test-emit-register
@@ -149,6 +150,6 @@
 
 (deftest test-make-label-table
   ;; Example from 9010A Programming Manual p. 7-6.
-  (is (= [[1 7]] (make-label-table
-                  [0x53 0x1F 0x01 0x01 0x1C 0x2B 0x01 0x1F 0x03 0x04
-                   0x1C 0x50]))))
+  (is (= '(1 7 0) (#'a/make-label-table
+                   [0x53 0x1F 0x01 0x01 0x1C 0x2B 0x01 0x1F 0x03 0x04
+                    0x1C 0x50]))))

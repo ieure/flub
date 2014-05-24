@@ -3,11 +3,11 @@
 ;; © 2014 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.parser.asm
+(ns flub.assembler.core
   (:refer-clojure :exclude [resolve])
   (:require [flub.parser.keys :as k]
             [clojure.string :as string])
-  (:use [flub.io.bytes :only [string->bytes]]
+  (:use [flub.io.bytes :only [string->bytes int->lebs]]
         [slingshot.slingshot :only [throw+]]
         [clojure.core.match :only [match]]
         [clojure.walk :only [prewalk]]
@@ -76,6 +76,21 @@
   (match label
          [:SYMBOL s] (resolve labels s)
          :else (emit state label)))
+
+(defn- make-label-table
+  "Make a table of labels and indexes into the program bytes.
+
+   Offsets point at the next step AFTER the label, relative to the
+   start of the program, including the 0x53 SOP marker.
+   See 9010A Programming Manual p. 7-6."
+  ([bytes] (make-label-table [] 1 bytes))
+  ([table i bytes]
+     (match [bytes]
+            [(a :guard empty?)] (flatten table)
+            [([43 n & rest] :seq)] (recur (conj table
+                                                (cons n (int->lebs (+ 1 i))))
+                                          (+ i 2) rest)
+            :else (recur table (+ i 1) (rest bytes)))))
 
 
 ;; Emitting bytes
@@ -153,7 +168,7 @@
 
 (defemit :STRING [state [s sval]]
   ;; FIXME - need to replace symbol names
-  (string->bytes sval))
+  (vcc (string->bytes sval) 0x74))
 
 (defemit :GOTO [state [g label]]
   (vcc (k/key 'goto)
@@ -172,6 +187,22 @@
 
 ;; Containers - these just emit their contents
 
+(defemit :PROGRAM_HEAD [state [ph prog]]
+  (vcc 0x1a (resolve-prog state prog)))
+
+(defemit :PROGRAM_BODY [state [p & rest]]
+  ;; "0x53 indicates the start-of-program, and is always the first
+  ;; byte in a program."
+  ;; "0x50 indicates the end-of-program, and is always the last byte
+  ;; of a program (labels may follow)."
+  ;;
+  ;; - 9010A Programming Manual p. 7-5
+  (let [prog-bytes (vcc [0x53]
+                        (map (partial emit state) rest)
+                        [0x50])]
+        (vcc prog-bytes
+             (make-label-table prog-bytes))))
+
 (defemit :STATEMENT [state [s & rest]]
   (mapv (partial emit state) rest))
 
@@ -184,20 +215,6 @@
 (defemit :ADDR [state [a rest]]
   (vec (flatten (emit state rest))))
 
-(defemit :PROGRAM_HEAD [state [ph prog]]
-  (vcc 0x1a (resolve-prog state prog)))
-
-(defemit :PROGRAM_BODY [state [p & rest]]
-  ;; "0x53 indicates the start-of-program, and is always the first
-  ;; byte in a program."
-  ;; "0x50 indicates the end-of-program, and is always the last byte
-  ;; of a program (labels may follow)."
-  ;;
-  ;; - 9010A Programming Manual p. 7-5
-  (vcc [0x53]
-       (map (partial emit state) rest)
-       [0x50]))
-
 (defemit :LABEL [state [l label]]
   (vcc (k/key :label)
        (resolve-label state label)))
@@ -207,34 +224,20 @@
        (resolve-prog state prog)))
 
 (defemit :WRITE [state [w target _ val]]
-  (vcc (k/key :exec)
+  (vcc (k/key :write)
        (emit state target)
-       (k/key :=)
-       (emit state val)))
+       (k/keys :enter-yes :=)
+       (emit state val)
+       (k/key :enter-yes)))
 
 (defemit :IF [state [i expr-a cond expr-b goto]]
   (vcc (k/key :if)
        (emit state expr-a)
        (map k/key cond)
        (emit state expr-b)
-       (emit state goto))
-  )
+       (emit state goto)))
 
  ;; User-servicable parts
-
-(defn- make-label-table
-  "Make a table of labels and indexes into the program bytes.
-
-   Offsets point at the next step AFTER the label, relative to the
-   start of the program, including the 0x53 SOP marker.
-   See 9010A Programming Manual p. 7-6."
-  ([bytes] (make-label-table [] 1 bytes))
-  ([table i bytes]
-     (match [bytes]
-            [(a :guard empty?)] table
-            [([43 n & rest] :seq)] (recur (conj table [n (+ 1 i)])
-                                          (+ i 2) rest)
-            :else (recur table (+ i 1) (rest bytes)))))
 
 (defn ast->bytes "Emit bytes for an AST."
   [ast] (emit ast))
