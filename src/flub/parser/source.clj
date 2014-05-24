@@ -28,7 +28,7 @@
     (let [res (p (normalize inp))]
       (if (insta/failure? res)
         res
-        (symbols/process (pp-include res))))
+        (symbols/process (pp-include (vec res)))))
     {:input inp}))
 
 (defn file->ast [file]
