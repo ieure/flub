@@ -4,6 +4,7 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.symbols
+  "Resolve symbols in Fluke source."
   (:require [clojure.walk :as walk])
   (:use [clojure.core.match :only [match]]
         [clojure.pprint]))
@@ -31,10 +32,12 @@
 
 (defn process "Process symbols in a program source AST"
   [ast]
-  (walk/postwalk
-   (fn [form]
-     (match form
-            [:PROGRAM & _] (resolve-syms form)
-            [:S & _] (resolve-syms form)
-            :else form))
-   ast))
+  {:pre [(= :S (first ast))]
+   :post [(= :S (first %))]}
+  (vec (walk/postwalk
+        (fn [form]
+          (match form
+                 [:PROGRAM & _] (resolve-syms form)
+                 [:S & _] (resolve-syms form)
+                 :else form))
+        (vec ast))))
