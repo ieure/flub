@@ -3,12 +3,12 @@
 ;; © 2014 Ian Eure All rights reserved.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.parser.keys
+(ns flub.keys
   "Map of key symbols to hex key codes."
   (:refer-clojure :exclude [key keys])
   (:require [clojure.string :as string]))
 
-(def key-table
+(def ^:const key-table
   "Numeric values for keys in program records.
 
    See 9010a Programming Manual, p. 7-5, table 7-2."
@@ -84,6 +84,10 @@
    ;; :reg 0x44 ;; FIXME
    })
 
+(def ^:const inverse-key-table
+  (assoc (zipmap (vals key-table) (clojure.core/keys key-table))
+    0x44 :reg))
+
 (defn normalize [key-ref]
   (cond
    (keyword? key-ref) key-ref
@@ -102,3 +106,11 @@
 
 (defn keys [& ks]
   (mapv key ks))
+
+(defn key-for [code]
+  (or (get inverse-key-table code)
+      (throw (IllegalArgumentException.
+                   (format "No such key code `%s'" code)))))
+
+(defn keys-for [codes]
+  (mapv key-for codes))
