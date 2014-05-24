@@ -32,7 +32,7 @@
     {:input inp}))
 
 (defn file->ast [file]
-  (log/info "Parsing `%s'\n" file)
+  (log/infof "Parsing `%s'\n" file)
   (flush)
   (binding [*stack* (conj *stack* file)]
     (with-open [i (io/reader file)]
@@ -74,7 +74,7 @@
    (fn [form]
      (match form
             [:INCLUDE name] (let [incf (find-include name)]
-                              (log/trace "Including file `%s' -> `%s'\n" name incf)
+                              (log/tracef "Including file `%s' -> `%s'\n" name incf)
                               (if (.endsWith (string/lower-case name) ".pod")
                                           (pod/file->ast incf)
                                           (file->ast incf)))
