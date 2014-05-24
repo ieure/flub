@@ -173,11 +173,8 @@
   `(testing ~(str "Assembling " example-file)
      (let [ast# (p/include ~example-dir
                            (p/file->ast ~(str example-dir example-file)))
-           recs# (asm/ast->bytes ast)
+           recs# (asm/ast->bytes ast#)
            unh# (unhandled recs#)]
-       (pprint ast#)
-       (pprint recs#)
-       #_(pprint unh#)
        (is (empty? unh#)
            (format "Unhandled instructions in output: %s" unh#)))))
 
