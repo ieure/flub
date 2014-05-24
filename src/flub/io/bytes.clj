@@ -4,7 +4,8 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.bytes "Byte-level utils: conversion, checksums, printing"
-  (:use [clojure.string :only [join]]))
+    (:use [clojure.string :only [join]]
+          [clojure.math.numeric-tower :only [expt]]))
 
 (def ^:const pretty-format "%02X")
 (def ^:const default-split 16)
