@@ -7,6 +7,7 @@
   (:require [instaparse.core :as insta]
             [clojure.java.io :as io]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clojure.walk :as walk]
             [flub.parser.pod :as pod]
             [flub.parser.symbols :as symbols])
@@ -31,7 +32,7 @@
     {:input inp}))
 
 (defn file->ast [file]
-  (printf "Parsing `%s'\n" file)
+  (log/info "Parsing `%s'\n" file)
   (flush)
   (binding [*stack* (conj *stack* file)]
     (with-open [i (io/reader file)]
@@ -73,7 +74,7 @@
    (fn [form]
      (match form
             [:INCLUDE name] (let [incf (find-include name)]
-                              #_(printf "Including file `%s' -> `%s'\n" name incf)
+                              (log/trace "Including file `%s' -> `%s'\n" name incf)
                               (if (.endsWith (string/lower-case name) ".pod")
                                           (pod/file->ast incf)
                                           (file->ast incf)))

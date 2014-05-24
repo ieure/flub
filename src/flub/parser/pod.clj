@@ -6,12 +6,10 @@
 (ns flub.parser.pod
   (:require [instaparse.core :as insta]
             [clojure.java.io :as io]
-            [clojure.string :as string]
-            [clojure.walk :as walk])
+            [clojure.tools.logging :as log])
   (:use [flub.io.ws]
         [clojure.pprint]
-        [clojure.core.match :only [match]])
-  (:import [java.io IOException]))
+        [clojure.core.match :only [match]]))
 
 (def p "Fluke pod definition parser"
   (insta/parser (slurp (io/resource "pod.ebnf"))))
@@ -25,7 +23,7 @@
     {:input inp}))
 
 (defn file->ast [file]
-  #_(printf "Parsing POD `%s'\n" file)
+  (log/trace "Parsing POD `%s'" file)
   (with-open [i (io/reader file)]
     (with-meta
       (doall (source->ast (slurp i)))
