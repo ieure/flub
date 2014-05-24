@@ -3,15 +3,16 @@
 ;; © 2014 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.assembler.core
+(ns flub.assembler
   (:refer-clojure :exclude [resolve])
-  (:require [flub.parser.keys :as k]
+  (:require [flub.keys :as k]
             [clojure.string :as string])
   (:use [flub.io.bytes :only [string->bytes int->lebs]]
         [slingshot.slingshot :only [throw+]]
         [clojure.core.match :only [match]]
         [clojure.walk :only [prewalk]]
-        [clojure.tools.macro :only [macrolet]]))
+        [clojure.tools.macro :only [macrolet]]
+        [clojure.pprint]))
 
 
 
@@ -116,7 +117,8 @@
    (= 1 (count args)) :stateless
    true               (ffirst (next args))))
 
-(def ^:constant no-state {:stack [] :labels [] :progs []})
+(def ^:constant no-state "Empty (default) state."
+  {:stack [] :labels [] :progs []})
 
 (defmulti emit "Emit bytes for the AST" emit-dispatch)
 
@@ -136,13 +138,14 @@
                     :exception e#}))))))
 
 ;; Fallback emitter - this will break things pretty badly.
-(defemit :default [{:keys [stack] :as state} [s & _]]
+(defemit :default [{:keys [stack] :as state} [s & _ :as subtree]]
   ;; FIXME for now. Once things are in a better state, it should throw
   ;; an exception.
   [:FIXME {:stack stack
-           :terminal s}])
+           :terminal s
+           :subtree subtree}])
 
-(defemit :REGISTER [state [_ reg-or-sym]]
+(defemit :REGISTER [state [r reg-or-sym]]
   (k/keys :reg reg-or-sym))
 
 (defemit :HEX [state [h vals]]
@@ -203,6 +206,9 @@
         (vcc prog-bytes
              (make-label-table prog-bytes))))
 
+(defemit :PROGRAM [state [p prog]]
+  (emit state prog))
+
 (defemit :STATEMENT [state [s & rest]]
   (mapv (partial emit state) rest))
 
@@ -214,6 +220,9 @@
 
 (defemit :ADDR [state [a rest]]
   (vec (flatten (emit state rest))))
+
+(defemit :ADDRESS_BLOCK [state [ab & range]]
+  (vcc (map #(emit state %) range)))
 
 (defemit :LABEL [state [l label]]
   (vcc (k/key :label)
@@ -236,6 +245,39 @@
        (map k/key cond)
        (emit state expr-b)
        (emit state goto)))
+
+(defemit :BUS_TEST [state & _]
+  (k/keys :bus-test :enter-yes))
+
+(defemit :RAM_TEST [state [rtest type ablock]]
+  (vcc (k/keys (condp = type
+                 "SHORT" :ram-short
+                 "LONG" :ram-long))
+       (emit state ablock)
+       (k/key :enter-yes)))
+
+;; Not sure if this is correct.
+(defemit :POD [state [p pod]]
+  [])
+
+(defemit :SYNC [state [s type]]
+  (k/keys :sync
+          ({"ADDRESS" :a
+            "DATA" :d
+            "FREE-RUN" :f} type)
+          :enter-yes))
+
+(defemit :RUN_UUT [state [ru & [_ addr]]]
+  (vcc (k/key :run-uut)
+       (if addr (emit state addr)
+           [])
+       (k/key :enter-yes)))
+
+(defemit :REG_ASSIGN [state [_ reg val]]
+  (vcc (emit state reg)
+       (k/key :=)
+       (emit state val)
+       (k/key :enter-yes)))
 
  ;; User-servicable parts
 
