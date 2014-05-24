@@ -13,10 +13,7 @@
                  [instaparse "1.2.12"]]
   :warn-on-reflection true
   :aot :all
-  :jvm-opts ["-Xmx1g" "-Xms1g"
-             ;; "-XX:+PrintGC" "-XX:+PrintGCDetails" "-XX:+PrintGCTimeStamps"
-             ]
+  :jvm-opts ["-Xmx1g" "-Xms1g"]
   :main flub.core
-  :profiles {:dev {:resource-paths ["examples/" "resources/"]}})
-
-
+  :profiles {:dev {:resource-paths ["examples/" "resources/"]
+                   :plugins [[lein-cloverage "1.0.2"]]}})
