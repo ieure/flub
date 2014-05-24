@@ -46,6 +46,19 @@ FIXME - should dump out a serial port
  - Every character in a symbolic name is significant, instead of only
    the first eight.
 
+## Status
+
+ - Binary <-> Fluke hex codec. Working. -> `flub.io.hex`
+ - Parse POD files. Working. -> `flub.parser.pod`
+ - Process include files. Working.
+ - Parse source code into AST. 90% working. `BINARY` statement not
+   supported. -> `flub.parser.source`
+ - Emit bytes from AST. Incomplete. -> `flub.assembler.core`
+ - Parse hex into AST. Half working. Parses into an intermediate AST,
+   but needs to go from that to source AST. -> `flub.parser.recordng`
+ - Produce source code from source AST. Not implemented.
+ - Uploading via serial port. Not implemented.
+
 ## License
 
 Copyright © 2013, 2014 Ian Eure
