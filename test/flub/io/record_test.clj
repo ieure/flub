@@ -6,7 +6,7 @@
 (ns flub.io.record
   (:use [clojure.test]
         [clojure.pprint])
-  (:require [flub.io.recordng :as r]
+  (:require [flub.io.record :as r]
             [flub.io.hex :as hex]
             [clojure.java.io :as io]))
 
