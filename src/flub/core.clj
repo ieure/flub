@@ -7,10 +7,11 @@
   (:require [flub.parser.source :as sp]
             [flub.sig :as sig]
             [flub.io.hex :as hex]
+            [flub.assembler :as asm]
             [instaparse.core :as insta]
             [instaparse.failure :as fail])
   (:use [flub.io.mmap :only [mmap]]
-        [flub.io.record :only [bytes->records]]
+        [flub.io.record :only [disass]]
         [clojure.pprint])
   (:gen-class))
 
@@ -29,7 +30,7 @@
 
 (defn dc [files]
   (doseq [file files]
-    (pprint (bytes->records (hex/file->bytes file))))
+    (pprint (disass (hex/file->bytes file))))
   0)
 
  ;; Commands

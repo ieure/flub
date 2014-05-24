@@ -6,7 +6,7 @@
 (ns flub.io.record
   (:use [flub.io.bytes :only [merge-bytes bytes->string bit-lookup]]
         [clojure.math.numeric-tower :only [expt]])
-  (:require [flub.parser.keys :as k]))
+  (:require [flub.keys :as k]))
 
 ;; 9010a Programming Manual, p7-3, section 7-5.
 (def ^:const trap-syms
