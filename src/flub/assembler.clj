@@ -6,7 +6,8 @@
 (ns flub.assembler
   (:refer-clojure :exclude [resolve])
   (:require [flub.keys :as k]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [clojure.tools.logging :as log])
   (:use [flub.io.bytes :only [string->bytes int->lebs]]
         [slingshot.slingshot :only [throw+]]
         [clojure.core.match :only [match]]
@@ -93,6 +94,11 @@
                                           (+ i 2) rest)
             :else (recur table (+ i 1) (rest bytes)))))
 
+ ;; Handling numbers
+
+(defn numeric [[type ^String val]]
+    (Integer/parseInt val (condp = type :DEC 10 :HEX 16)))
+
 
 ;; Emitting bytes
 ;;
@@ -128,17 +134,20 @@
 
 (defmacro defemit "Define an AST emitter."
   [kw args & body]
-  `(defmethod emit ~kw ~args
-     (let [~'state (update-in ~'state [:stack] conj ~kw)
-           stack# (:stack ~'state)]
+  `(defmethod emit ~kw [state# args#]
+     (let [state# (update-in state# [:stack] conj ~kw)
+           stack# (:stack state#)]
+       (log/tracef "@%s => %s" (string/join "->" stack#) args#)
        (try
-         ~@body
+         (let [out# ((fn ~args ~@body) state# args#)]
+           (log/tracef "%s <- %s" out# (string/join "->" stack#))
+           out#)
          (catch Exception e#
            (throw+ {:stack stack#
                     :exception e#}))))))
 
 ;; Fallback emitter - this will break things pretty badly.
-(defemit :default [{:keys [stack] :as state} [s & _ :as subtree]]
+(defmethod emit :default [{:keys [stack] :as state} [s & _ :as subtree]]
   ;; FIXME for now. Once things are in a better state, it should throw
   ;; an exception.
   [:FIXME {:stack stack
@@ -206,9 +215,6 @@
         (vcc prog-bytes
              (make-label-table prog-bytes))))
 
-(defemit :PROGRAM [state [p prog]]
-  (emit state prog))
-
 (defemit :STATEMENT [state [s & rest]]
   (mapv (partial emit state) rest))
 
@@ -266,6 +272,9 @@
             "DATA" :d
             "FREE-RUN" :f} type)
           :enter-yes))
+
+(defemit :STOP [state & _]
+  (k/key :stop))
 
 (defemit :RUN_UUT [state [ru & [_ addr]]]
   (vcc (k/key :run-uut)
