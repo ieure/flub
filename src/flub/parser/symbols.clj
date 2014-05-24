@@ -3,7 +3,7 @@
 ;; © 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.assembler.symbols
+(ns flub.parser.symbols
   (:require [clojure.walk :as walk])
   (:use [clojure.core.match :only [match]]
         [clojure.pprint]))

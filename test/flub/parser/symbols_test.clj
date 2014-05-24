@@ -3,11 +3,11 @@
 ;; © 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.assembler.symbols-test
+(ns flub.parser.symbols-test
   (:use [clojure.test]
         [clojure.pprint]
         [flub.test-util])
-  (:require [flub.assembler.symbols :as syms]
+  (:require [flub.parser.symbols :as syms]
             [flub.parser.source :as src]))
 
 (deftest resolve-syms
