@@ -180,6 +180,10 @@
   (vcc (k/key 'displ)
        (emit state dstr)))
 
+(defemit :AUX [state [d dstr]]
+  (vcc (k/key :aux-if)
+       (emit state dstr)))
+
 (defemit :STRING [state [s sval]]
   ;; FIXME - need to replace symbol names
   (vcc (string->bytes sval) 0x74))
@@ -223,11 +227,27 @@
 (defemit :TERM [state [p & rest]]
   (map (partial emit state) rest))
 
+(defemit :TERM_UNOP [state [tu cmd n]]
+  (let [n (if n (numeric n) 1)]
+    (repeat n (k/key
+               (condp = cmd
+                 "CPL" :compl
+                 "DEC" :decr
+                 "INC" :incr
+                 "SHR" :shift-right
+                 "SHL" :shift-left)))))
+
 (defemit :EXPR [state [p & rest]]
   (map (partial emit state) rest))
 
 (defemit :ADDR [state [a rest]]
   (vec (flatten (emit state rest))))
+
+(defemit :AND [state & _]
+  (k/key :and))
+
+(defemit :OR [state & _]
+  (k/key :or))
 
 (defemit :ADDRESS_BLOCK [state [ab & range]]
   (vcc (map #(emit state %) range)))
@@ -286,9 +306,31 @@
 
 (defemit :REG_ASSIGN [state [_ reg val]]
   (vcc (emit state reg)
-       (k/key :=)
        (emit state val)
        (k/key :enter-yes)))
+
+(defemit :DTOG [state [dtog addr expr bit bitexpr]]
+  (vcc (k/keys :toggl-data
+               :enter-yes)
+       (emit state addr)
+       (k/key :enter-yes)
+       (emit state expr)
+       (k/key :enter-yes)
+       (emit state bitexpr) ;; FIXME handle "*"
+       (k/key :enter-yes)))
+
+(defemit :READ [state [read addr]]
+  (vcc (k/keys :read
+               :enter-yes)
+       (emit state addr)
+       (k/key :enter-yes)))
+
+
+(defemit :READ_PROBE [state & _]
+  (k/keys :read-probe :enter-yes))
+
+(defemit :READ_STS [state & _]
+  (k/keys :read :sts-ctl :enter-yes))
 
  ;; User-servicable parts
 
