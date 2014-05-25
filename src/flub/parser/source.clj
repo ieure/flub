@@ -28,7 +28,7 @@
     (let [res (p (normalize inp))]
       (if (insta/failure? res)
         res
-        (symbols/process (pp-include (vec res)))))
+        (symbols/process (pp-include res))))
     {:input inp}))
 
 (defn file->ast [file]
@@ -76,7 +76,7 @@
             [:INCLUDE name] (let [incf (find-include name)]
                               (log/tracef "Including file `%s' -> `%s'\n" name incf)
                               (if (.endsWith (string/lower-case name) ".pod")
-                                          (pod/file->ast incf)
-                                          (file->ast incf)))
+                                (pod/file->ast incf)
+                                (file->ast incf)))
             :else form))
    ast))
