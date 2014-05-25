@@ -7,6 +7,7 @@
   (:refer-clojure :exclude [resolve])
   (:require [flub.keys :as k]
             [clojure.string :as string]
+            [clojure.stacktrace :as stacktrace]
             [clojure.tools.logging :as log])
   (:use [flub.io.bytes :only [string->bytes int->lebs]]
         [slingshot.slingshot :only [throw+]]
@@ -144,7 +145,8 @@
            out#)
          (catch Exception e#
            (throw+ {:stack stack#
-                    :exception e#}))))))
+                    :exception e#
+                    :trace (with-out-str (stacktrace/print-cause-trace e#))}))))))
 
 ;; Fallback emitter - this will break things pretty badly.
 (defmethod emit :default [{:keys [stack] :as state} [s & _ :as subtree]]
