@@ -5,7 +5,8 @@
 ;;
 (ns flub.highlevel-test
   (:use [clojure.test]
-        [clojure.pprint])
+        [clojure.pprint]
+        [flub.test-util])
   (:require [clojure.java.io :as io]
             [flub.io.hex :as hex]
             [flub.io.record :as rec]
@@ -14,9 +15,9 @@
 
 (deftest test-include
   (is
-   (=
+   (parsed-to
     [:S
-     [:POD
+     [:PODDEF
       [:FORCELN [:FORCE_LINE "BUSRQ"] [:DEC "4"]]
       [:FORCELN [:FORCE_LINE "WAIT"] [:DEC "5"]]
       [:BUS_ADDR [:HEX "FFFF"]]
