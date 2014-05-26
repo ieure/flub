@@ -159,8 +159,7 @@
          (catch Exception e#
            (log/error e# "Error emitting")
            (throw+ {:stack stack#
-                    :exception e#
-                    :trace (with-out-str (stacktrace/print-cause-trace e#))}))))))
+                    :exception e#}))))))
 
 ;; Fallback emitter - this will break things pretty badly.
 (defmethod emit :default [{:keys [stack] :as state} [s & _ :as subtree]]
