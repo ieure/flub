@@ -63,14 +63,10 @@
 
 (defn scan-labels "Scan for labels in ast."
   [ast]
-  (let [defs (transient []), uses (transient [])]
+  (let [defs (transient [])]
     (prewalk #(do (match % [:LABEL [:SYMBOL s]] (conj! defs s)
-                           [:GOTO [:SYMBOL s]]  (conj! uses s)
                            :else nil) %) ast)
-    (let [defs (persistent! defs)
-          uses (persistent! uses)]
-      {:defs defs
-       :uses uses})))
+    (persistent! defs)))
 
 ;; Resolving symbols
 
@@ -223,7 +219,7 @@
 ;; The start of a program scans for progam labels and pushes them into
 ;; the state
 (defemit :PROGRAM [state [p & rest]]
-  (let [state (assoc state :labels (:defs (scan-labels rest)))]
+  (let [state (assoc state :labels (scan-labels rest))]
     (log/tracef "@%s - State now: %s" (string/join "->" (:stack state)) state)
     (map (partial emit state) rest)))
 
