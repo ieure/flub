@@ -53,9 +53,10 @@ FIXME - should dump out a serial port
  - Process include files. Working.
  - Parse source code into AST. 90% working. `BINARY` statement not
    supported. -> `flub.parser.source`
- - Emit bytes from AST. Incomplete. -> `flub.assembler.core`
+ - Emit bytes from AST. 80% working, does not emit pod definitions or
+   setup parameters yet. -> `flub.assembler`
  - Parse hex into AST. Half working. Parses into an intermediate AST,
-   but needs to go from that to source AST. -> `flub.parser.recordng`
+   but needs to go from that to source AST. -> `flub.parser.record`
  - Produce source code from source AST. Not implemented.
  - Uploading via serial port. Not implemented.
 

@@ -11,9 +11,10 @@
             [clojure.walk :as walk]
             [flub.parser.pod :as pod]
             [flub.parser.symbols :as symbols])
-  (:use [flub.io.ws]
-        [clojure.pprint]
-        [clojure.core.match :only [match]])
+  (:use [clojure.pprint]
+        [clojure.core.match :only [match]]
+        [flub.io.ws]
+        [slingshot.slingshot :only [throw+]])
   (:import [java.io IOException File]))
 
 (def p "Fluke source parser"
@@ -23,17 +24,31 @@
 
 (def ^:dynamic *stack* [])
 
+(defn- throw-on-failure [o]
+  (if (insta/failure? o)
+      (do
+        (log/error o)
+        (throw+ o))
+      o))
+
+(defmacro parse->> [expr & forms]
+  (let [g (gensym)
+        pstep (fn [step] `(if (insta/failure? ~g) (throw+ ~g)
+                              (->> ~g ~step)))]
+    `(let [~g ~expr
+           ~@(interleave (repeat g) (map pstep forms))]
+       ~g)))
+
 (defn source->ast "Parse input and return an AST" [^String inp]
   (with-meta
-    (let [res (p (normalize inp))]
-      (if (insta/failure? res)
-        (do
-          (log/error res)
-          res)
-        (symbols/process (pp-include res))))
+    (parse->> (normalize inp)
+              (p)
+              (pp-include)
+              (symbols/process))
     {:input inp}))
 
-(defn file->ast [file]
+(defn file->ast "Parse a file into an AST."
+  [file]
   (log/infof "Parsing `%s'\n" file)
   (flush)
   (binding [*stack* (conj *stack* file)]
