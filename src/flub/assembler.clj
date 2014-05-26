@@ -34,6 +34,10 @@
      (coll? head)    (recur tail (vec (concat acc head)))
      true            (recur tail (conj acc head)))))
 
+(defn execution? "Is this state part of an :EXECUTE?"
+  [{:keys [stack]}]
+  (contains? stack :EXECUTE))
+
 
 ;; Scanning for & resolving program names & labels
 ;;
@@ -276,8 +280,12 @@
        (resolve-label state label)))
 
 (defemit :EXECUTE [state [e prog]]
-  (vcc (k/key :exec)
-       (resolve-prog state prog)))
+  (vk :exec (emit state prog)))
+
+(defemit :SYMBOL [{:keys [labels progs]} [_ sym]]
+  (if execution?
+    (resolve progs sym)
+    (resolve-label labels sym)))
 
 (defemit :WRITE [state [w target _ val]]
   (vcc (k/key :write)
