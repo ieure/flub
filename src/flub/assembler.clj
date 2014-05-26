@@ -217,6 +217,9 @@
     (log/tracef "@%s - State now: %s" (string/join "->" (:stack state)) state)
     (mapcat (partial emit state) rest)))
 
+(defemit :INCLUDED [state [inc rest]]
+  (emit state rest))
+
 ;; The start of a program scans for progam labels and pushes them into
 ;; the state
 (defemit :PROGRAM [state [p & rest]]
@@ -331,27 +334,49 @@
        (k/key :enter-yes)))
 
 (defemit :DTOG [state [dtog addr expr bit bitexpr]]
-  (vcc (k/keys :toggl-data
-               :enter-yes)
-       (emit state addr)
-       (k/key :enter-yes)
-       (emit state expr)
-       (k/key :enter-yes)
-       (emit state bitexpr) ;; FIXME handle "*"
-       (k/key :enter-yes)))
+  (vk :toggl-data
+      (emit state addr)
+      :enter-yes
+      (emit state expr)
+      :enter-yes
+      (emit state bitexpr) ;; FIXME handle "*"
+      :enter-yes))
 
 (defemit :READ [state [read addr]]
-  (vcc (k/keys :read
-               :enter-yes)
-       (emit state addr)
-       (k/key :enter-yes)))
-
+  (vk :read
+      (emit state addr)
+      :enter-yes))
 
 (defemit :READ_PROBE [state & _]
-  (k/keys :read-probe :enter-yes))
+  (vk :read-probe :enter-yes))
 
-(defemit :READ_STS [state & _]
-  (k/keys :read :sts-ctl :enter-yes))
+(defemit :STS [state & _]
+  (vk :sts-ctl))
+
+(defemit :CTL [state & _]
+  (vk :sts-ctl))
+
+(defemit :WALK [state [walk addr _ val]]
+  (vk :walk
+      (emit state addr)
+      :enter-yes
+      (emit state val)
+      :enter-yes))
+
+(defemit :ATOG [state [atog loc _ bit]]
+  (vk :toggl-addr
+      (emit state loc)
+      :enter-yes))
+
+(defemit :ROM_TEST [state [romtest addrs _ sig]]
+  (vk :rom-test
+      (when addrs (emit state addrs))
+      :enter-yes
+      (when sig (emit state sig))
+      :enter-yes))
+
+(defemit :RAMP [state [ramp addr]]
+  (vk :ramp (emit state addr) :enter-yes))
 
  ;; User-servicable parts
 
