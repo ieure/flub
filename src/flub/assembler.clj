@@ -56,8 +56,10 @@
     (prewalk #(do (match % [:LABEL [:SYMBOL s]] (conj! defs s)
                            [:GOTO [:SYMBOL s]]  (conj! uses s)
                            :else nil) %) ast)
-    {:defs (persistent! defs)
-     :uses (persistent! uses)}))
+    (let [defs (persistent! defs)
+          uses (persistent! uses)]
+      {:defs defs
+       :uses uses})))
 
 ;; Resolving symbols
 
@@ -71,9 +73,12 @@
 
 (defn resolve-prog "Resolve a program reference."
   [{:keys [progs] :as state} prog]
-  (match prog
-         [:SYMBOL s] (resolve progs s)
-         :else (emit state prog)))
+  (let [out (match prog
+                   [:SYMBOL s] (resolve progs s)
+                   :else (emit state prog))]
+    (log/tracef "@%s resolved prog `%s' -> `%s'"
+                (string/join "->" (:stack state)) prog out)
+    out))
 
 (defn resolve-label "Resolve a label."
   [{:keys [labels] :as state} label]
@@ -145,6 +150,7 @@
            (log/tracef "%s <- %s" out# (string/join "->" stack#))
            out#)
          (catch Exception e#
+           (log/error e# "Error emitting")
            (throw+ {:stack stack#
                     :exception e#
                     :trace (with-out-str (stacktrace/print-cause-trace e#))}))))))
@@ -203,7 +209,9 @@
 ;; The start of a program scans for progam labels and pushes them into
 ;; the state
 (defemit :PROGRAM [state [p & rest]]
-  (map (partial emit (assoc state :labels (:defs (scan-labels rest)))) rest))
+  (let [state (assoc state :labels (:defs (scan-labels rest)))]
+    (log/tracef "@%s - State now: %s" (string/join "->" (:stack state)) state)
+    (map (partial emit state) rest)))
 
 ;; Containers - these just emit their contents
 
