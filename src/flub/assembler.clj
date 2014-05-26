@@ -8,7 +8,7 @@
   (:require [flub.keys :as k]
             [clojure.string :as string]
             [clojure.stacktrace :as stacktrace]
-            [clojure.tools.logging :as log])
+            [taoensso.timbre :as log])
   (:use [flub.io.bytes :only [string->bytes int->lebs]]
         [slingshot.slingshot :only [throw+]]
         [clojure.core.match :only [match]]

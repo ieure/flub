@@ -9,7 +9,8 @@
             [flub.io.hex :as hex]
             [flub.assembler :as asm]
             [instaparse.core :as insta]
-            [instaparse.failure :as fail])
+            [instaparse.failure :as fail]
+            [taoensso.timbre :as log])
   (:use [flub.io.mmap :only [mmap]]
         [flub.io.record :only [disass]]
         [clojure.pprint])

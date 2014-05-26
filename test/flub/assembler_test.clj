@@ -9,7 +9,8 @@
   (:require [flub.assembler :as asm]
             [flub.io.record :as r]
             [flub.io.hex :as hex]
-            [flub.parser.source :as p]))
+            [flub.parser.source :as p]
+            [taoensso.timbre :as log]))
 
 (defonce ast
   [:S

@@ -6,7 +6,7 @@
 (ns flub.parser.pod
   (:require [instaparse.core :as insta]
             [clojure.java.io :as io]
-            [clojure.tools.logging :as log])
+            [taoensso.timbre :as log])
   (:use [flub.io.ws]
         [clojure.pprint]
         [clojure.core.match :only [match]]))

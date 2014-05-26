@@ -7,7 +7,7 @@
   (:require [instaparse.core :as insta]
             [clojure.java.io :as io]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [clojure.walk :as walk]
             [flub.parser.pod :as pod]
             [flub.parser.symbols :as symbols])
