@@ -16,8 +16,7 @@
   [^String inp]
   (string/replace inp #"+" ""))
 
-(defn ^String normalize
-  "Normalize a source input string."
+(defn ^String normalize "Normalize a source input string."
   [^String inp]
   (-> (normalize-newlines inp)
       (truncate-eof)
