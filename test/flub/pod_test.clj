@@ -11,7 +11,7 @@
             [flub.parser.pod :as pod]))
 
 (deftest test-pod-parse
-  (is (= [:POD
+  (is (= [:PODDEF
           [:FORCELN [:FORCE_LINE "BUSRQ"] [:DEC "4"]]
           [:FORCELN [:FORCE_LINE "WAIT"] [:DEC "5"]]
           [:BUS_ADDR [:HEX "FFFF"]]
@@ -20,55 +20,55 @@
 
 (deftest all-pod-files-parse
   (testing "1802.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/1802.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/1802.POD"))))))
 
   (testing "6502.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/6502.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/6502.POD"))))))
 
   (testing "6800.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/6800.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/6800.POD"))))))
 
   (testing "68000.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/68000.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/68000.POD"))))))
 
   (testing "6802.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/6802.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/6802.POD"))))))
 
   (testing "6809.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/6809.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/6809.POD"))))))
 
   (testing "6809E.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/6809E.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/6809E.POD"))))))
 
   (testing "8041.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/8041.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/8041.POD"))))))
 
   (testing "8048.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/8048.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/8048.POD"))))))
 
   (testing "8080.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/8080.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/8080.POD"))))))
 
   (testing "8085.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/8085.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/8085.POD"))))))
 
   (testing "8086.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/8086.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/8086.POD"))))))
 
   (testing "8086MX.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/8086MX.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/8086MX.POD"))))))
 
   (testing "8088.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/8088.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/8088.POD"))))))
 
   (testing "8088MX.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/8088MX.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/8088MX.POD"))))))
 
   (testing "9900.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/9900.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/9900.POD"))))))
 
   (testing "Z80.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/Z80.POD"))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/Z80.POD"))))))
 
   (testing "Z8000.POD"
-    (is (= :POD (first (pod/file->ast (io/resource "include/Z8000.POD")))))))
+    (is (= :PODDEF (first (pod/file->ast (io/resource "include/Z8000.POD")))))))

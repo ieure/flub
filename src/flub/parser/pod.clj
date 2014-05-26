@@ -15,7 +15,7 @@
   (insta/parser (slurp (io/resource "pod.ebnf"))))
 
 (defn- patch-tree [ast]
-   (vec (cons :POD (rest ast))))
+   (vec (cons :PODDEF (rest ast))))
 
 (defn source->ast "Parse input and return an AST" [^String inp]
   (with-meta
