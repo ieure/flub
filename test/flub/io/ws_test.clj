@@ -18,7 +18,7 @@
     (is (= "foo\nbar\n" (ws/normalize-newlines "foo\rbar\r"))))
 
   (testing "Mixed newlines -> UNIX"
-    (is (= "foo\nbar\nbaz\n" (ws/normalize-newlines "foo\nbar\rbaz\r\n"))))
+    (is (= "foo\nbar\nbaz\n" (ws/normalize-newlines "foo\nbar\rbaz\r\n")))))
 
-  (testing "EOF chars"
-    (is (= "foo" (ws/normalize-newlines "foo")))))
+(deftest test-truncate-eof
+  (is (= "foo" (ws/truncate-eof "foo"))))
