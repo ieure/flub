@@ -23,6 +23,17 @@
 (defn vcc "Concatenates & flattens its arguments."
   [& seqs] (vec (flatten seqs)))
 
+(defn vk "Concatenates & flattens its arguments, treating keywords as keys"
+  [& seq]
+  (loop [[head & tail :as srest] seq
+         acc []]
+    (cond
+     (nil? srest)    acc
+     (nil? head)     (recur tail acc)
+     (keyword? head) (recur tail (conj acc (k/key head)))
+     (coll? head)    (recur tail (vec (concat acc head)))
+     true            (recur tail (conj acc head)))))
+
 
 ;; Scanning for & resolving program names & labels
 ;;
