@@ -27,7 +27,9 @@
   (with-meta
     (let [res (p (normalize inp))]
       (if (insta/failure? res)
-        res
+        (do
+          (log/error res)
+          res)
         (symbols/process (pp-include res))))
     {:input inp}))
 
