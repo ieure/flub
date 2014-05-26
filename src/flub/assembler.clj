@@ -29,11 +29,12 @@
 ;; Fluke source has two kinds of symbols: Program names and
 ;; labels. Labels are visible only within the scope of the program
 ;; containing them, while programs are visible to all other programs
-;; in the same source file.
+;; in the same source file, or other source files which include them.
 ;;
-;; Symbols must be resolved to numeric values, and programs must be
-;; emitted in numeric order. Mixing numeric and symbolic program
-;; identifiers will probably blow up pretty spectacularly.
+;; Program name symbols must be resolved to numeric values, and
+;; programs must be emitted in numeric order. Mixing numeric and
+;; symbolic program identifiers will probably blow up pretty
+;; spectacularly.
 ;;
 ;; Symbol tables are vectors of strings; the string is the symbol from
 ;; the source. Resolving a symbol returns the index of the symbol in
@@ -42,12 +43,12 @@
 
 (defn scan-prognames "Scan for program names in ast."
   [ast]
-  (let [defs (transient []), uses (transient [])]
+  (let [defs (transient [])]
     (prewalk #(do (match % [:PROGRAM_HEAD [:SYMBOL s]] (conj! defs s)
-                           [:EXECUTE [:SYMBOL s]]      (conj! uses s)
                            :else nil) %) ast)
-    {:defs (persistent! defs)
-     :uses (persistent! uses)}))
+    (let [defs (persistent! defs)]
+      (log/tracef "Found progs %s" defs)
+      defs)))
 
 (defn scan-labels "Scan for labels in ast."
   [ast]
@@ -195,8 +196,9 @@
 ;; The start of the source scans for progam symbols and pushes them
 ;; into the state
 (defemit :S [state [s & rest]]
-  (mapcat (partial emit (assoc state :progs (:defs (scan-prognames rest))))
-       rest))
+  (let [state (assoc state :progs (scan-prognames rest))]
+    (log/tracef "@%s - State now: %s" (string/join "->" (:stack state)) state)
+    (mapcat (partial emit state) rest)))
 
 ;; The start of a program scans for progam labels and pushes them into
 ;; the state
