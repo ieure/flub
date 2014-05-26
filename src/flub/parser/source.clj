@@ -74,11 +74,11 @@
 (defn pp-include "Splice included files into the AST." [ast]
   (walk/prewalk
    (fn [form]
-     (match form
-            [:INCLUDE name] (let [incf (find-include name)]
-                              (log/tracef "Including file `%s' -> `%s'\n" name incf)
-                              (if (.endsWith (string/lower-case name) ".pod")
-                                (pod/file->ast incf)
-                                (file->ast incf)))
+     (match form [:INCLUDE name]
+            (let [incf (find-include name)]
+              (log/tracef "Including file `%s' -> `%s'\n" name incf)
+               (if (.endsWith (string/lower-case name) ".pod")
+                 (pod/file->ast incf)
+                 (vec (cons :INCLUDED (rest (file->ast incf))))))
             :else form))
    ast))
