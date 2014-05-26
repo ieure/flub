@@ -118,7 +118,7 @@ DISPLAY = <"DPY" (" " | "-" | "\t")> STRING
 DTOG = <"DTOG" AT> (((ADDR | WILD) <EQ> (EXPR | WILD)) |
                      CTL <EQ> (EXPR | WILD)) <SEP> "BIT" <SEP> (EXPR | WILD)
 (* FIXME - These should be decimal, but default to hex *)
-EXECUTE = <("EXECUTE" | "EX") (SEP "PROGRAM")? SEP> EXPR
+EXECUTE = <("EXECUTE" | "EX") (SEP "PROGRAM")? SEP> (EXPR | SYMBOL)
 GOTO = <"GOTO" SEP> (HEX | SYMBOL)
 IF = <"IF" SEP> EXPR <SEP?> (">" | "=" | ">=") <SEP?> EXPR <SEP> GOTO
 IO_TEST = <"IO" (SEP "TEST")?> (<AT> ADDRESS_BLOCK <SEP> "BTS" <SEP> (EXPR | WILD))?
