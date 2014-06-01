@@ -134,12 +134,10 @@
 (defn emit-dispatch
   "Dispatch an emit call.
 
-   If there is only one arg, assume there is no state and dispatch to
-   :stateless. This lets us do arity overloading in the multimethod."
-  [& args]
-  (cond
-   (= 1 (count args)) :stateless
-   true               (ffirst (next args))))
+   With one arg, dispatch to :stateless.
+   Otherwise, dispatch on the first symbol of the 1th arg."
+  ([arg] :stateless)
+  ([state [node & _] & _] node))
 
 (def ^:constant no-state "Empty (default) state."
   {:stack [] :labels [] :progs []})
