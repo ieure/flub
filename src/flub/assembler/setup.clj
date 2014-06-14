@@ -6,7 +6,6 @@
 (ns flub.assembler.setup
   (:use [flub.assembler.core]))
 
-
 #_(defn- merge-traps [acc branch]
     (match branch
            [:TRAP n] (bit-or acc n)
