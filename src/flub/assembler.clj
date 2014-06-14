@@ -176,6 +176,16 @@
            :terminal s
            :subtree subtree}])
 
+;; The start of the source scans for progam symbols and pushes them
+;; into the state
+(defemit :S [state [s & rest]]
+  (let [state (assoc state :progs (scan-prognames rest))]
+    (log/tracef "@%s - State now: %s" (string/join "->" (:stack state)) state)
+    (mapcat (partial emit state) rest)))
+
+(defemit :INCLUDED [state [inc rest]]
+  (emit state rest))
+
 (defemit :REGISTER [state [r reg-or-sym]]
   (k/keys :reg reg-or-sym))
 
@@ -211,16 +221,6 @@
 (defemit :GOTO [state [g label]]
   (vcc (k/key 'goto)
        (resolve-label state label)))
-
-;; The start of the source scans for progam symbols and pushes them
-;; into the state
-(defemit :S [state [s & rest]]
-  (let [state (assoc state :progs (scan-prognames rest))]
-    (log/tracef "@%s - State now: %s" (string/join "->" (:stack state)) state)
-    (mapcat (partial emit state) rest)))
-
-(defemit :INCLUDED [state [inc rest]]
-  (emit state rest))
 
 ;; The start of a program scans for progam labels and pushes them into
 ;; the state
