@@ -3,7 +3,7 @@
 ;; © 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.pod-test
+(ns flub.parser.pod-test
   (:use [clojure.test]
         [clojure.pprint])
   (:require [clojure.java.io :as io]
