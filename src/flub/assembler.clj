@@ -79,8 +79,9 @@
   [tbl s]
   (let [n (.indexOf (or tbl []) s)]
     (if (< n 0)
-      (throw (NoSuchFieldException.
-              (format "Symbol `%s' does not exist in table: %s" s tbl)))
+      (throw+ {:undefined :symbol
+               :symbol s
+               :symtab tbl})
       n)))
 
 (defn resolve-prog "Resolve a program reference."
