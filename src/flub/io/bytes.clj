@@ -58,6 +58,15 @@
 (defn checksum "Compute a simple checksum of bytes."
   [bytes] (-> (reduce + bytes) (unchecked-remainder-int 256)))
 
+ ;; Endianness
+
+(defn int->lebs
+  "Turn a 16-bit int into two little-endian bytes."
+  [i]
+  [(bit-and i 0x00FF)
+   (bit-shift-right i 8)])
+
+
  ;; Strings
 
 (defn- byte->7bit "Strip the high bit from a byte"
