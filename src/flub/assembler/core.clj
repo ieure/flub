@@ -3,7 +3,7 @@
 ;; © 2014 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.assembler
+(ns flub.assembler.core
   (:refer-clojure :exclude [resolve])
   (:require [flub.keys :as k]
             [clojure.string :as string]
@@ -11,7 +11,6 @@
             [taoensso.timbre :as log])
   (:use [flub.io.bytes :only [string->bytes int->lebs]]
         [slingshot.slingshot :only [throw+]]
-        [clojure.math.numeric-tower :only [expt]]
         [clojure.core.match :only [match]]
         [clojure.walk :only [prewalk]]
         [clojure.tools.macro :only [macrolet]]
@@ -60,6 +59,7 @@
 (defn scan-prognames "Scan for program names in ast."
   [ast]
   (let [defs (transient [])]
+    ;; FIXME - What about `PROGRAM 0'?
     (prewalk #(do (match % [:PROGRAM_HEAD [:SYMBOL s]] (conj! defs s)
                            :else nil) %) ast)
     (let [defs (persistent! defs)]
@@ -127,11 +127,10 @@
 ;; two arguments, `state' and `ast'. State contains a map containing
 ;; program symbols and label symbols for the current program. The
 ;; :PROGRAM and :S methods push new info into the state, and most
-;; other methods don't care. The defemit and with-thunk macros handle
-;; passing state between emitters. If an emitter needs to call
-;; another, calling `(thunk ast)' will automatically inject the
-;; current state into the call. Emitters which need to alter state
-;; must do so manually.
+;; other methods don't care.
+;;
+;; defemit is used to create a new emitter, and copes with error
+;; handling and tracing.
 
 (defn emit-dispatch
   "Dispatch an emit call.
@@ -156,14 +155,9 @@
      (let [state# (update-in state# [:stack] conj ~kw)
            stack# (:stack state#)]
        (log/tracef "@%s => %s" (string/join "->" stack#) args#)
-       (try
-         (let [out# ((fn ~args ~@body) state# args#)]
-           (log/tracef "%s <- %s" out# (string/join "->" stack#))
-           out#)
-         (catch Exception e#
-           (log/error e# "Error emitting")
-           (throw+ {:stack stack#
-                    :exception e#}))))))
+       (let [out# ((fn ~args ~@body) state# args#)]
+         (log/tracef "%s <- %s" out# (string/join "->" stack#))
+         out#))))
 
 ;; Fallback emitter - this will break things pretty badly.
 (defmethod emit :default [{:keys [stack] :as state} [s & _ :as subtree]]
@@ -384,40 +378,34 @@
 (defemit :RAMP [state [ramp addr]]
   (vk :ramp (emit state addr) :enter-yes))
 
- ;; Pod data
+ ;; Setup
 
-(defn- extract-force "Return a seq of (bit name) for all forcing lines."
-  [poddef]
-  (->> (filter (fn [[fl? & _]] (= :FORCELN fl?)) poddef)
-       (map (fn [[_ name def]] (reverse (cons name (emit def)))))))
+#_(defn- merge-traps [acc branch]
+  (match branch
+         [:TRAP n] (bit-or acc n)
+         :else n))
 
-(def ^:const force-defaults
-  (apply hash-map (interleave (range 8) (repeat "       "))))
+#_(defemit :SETUP [state [setup & rest]]
+  (let [partial (emit state rest)
+        traps (reduce merge-traps partial 0)
+        ]
 
-(defn- force-pad [name]
-  (apply str name (repeat (- 7 (count name)) " ")))
+    )
+  )
 
-(defn- force-recs
-  "Return forcing line records."
-  [forcedef]
-  (let [mask [0x0D (reduce bit-or (map #(expt 2 (first %)) forcedef))]
-        names (->> (flatten (map (fn [[bit name]] [bit (force-pad name)]) forcedef))
-                   (apply hash-map)
-                   (conj force-defaults))]
-    [mask
-     (vec (cons 0x0E (string->bytes (apply str (map names (range 4))))))
-     (vec (cons 0x0F (string->bytes (apply str (map names (range 4 8))))))]))
+(def ^:constant setup-trap-masks
+  {:SETUP_BAD_POWER_SUPPLY  2r10000000
+   :SETUP_ILLEGAL_ADDRESS   2r00100000
+   :SETUP_ACTIVE_INTERRUPT  2r00100000
+   :SETUP_ACTIVE_FORCE_LINE 2r00001000
+   :SETUP_CONTROL_ERROR     2r00000100
+   :SETUP_ADDRESS_ERROR     2r00000001
+   :SETUP_DATA_ERROR        2r00000010})
 
-(defemit :PODDEF [state [_ & defs]]
-  (conj (remove nil?
-              (map #(match %
-                           [:BUS_TEST_ADDR & _] (emit state %)
-                           [:RUN_UUT_ADDR & _]  (emit state %)
-                           [:FORCELN & fln]     nil
-                           ;; This shouldn't happen.
-                           :else %)
-                   defs))
-        (force-recs (extract-force defs))))
+(defemit :SETUP_TRAP [state [trap [line] yn]]
+  (let [val (emit state yn)]
+    [:TRAP (if (= val 0) 0
+               (get setup-trap-masks line))]))
 
 (defemit :BUS_TEST_ADDR [state [_ addr]]
   (vcc 0x05 (emit state addr)))

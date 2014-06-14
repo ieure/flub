@@ -3,10 +3,10 @@
 ;; © 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.assembler-test
+(ns flub.assembler.core-test
   (:use [clojure.test]
         [clojure.pprint])
-  (:require [flub.assembler :as asm]
+  (:require [flub.assembler.core :as asm]
             [flub.io.record :as r]
             [flub.io.hex :as hex]
             [flub.parser.source :as p]
@@ -176,10 +176,19 @@
                            (p/file->ast ~(str example-dir example-file)))
            recs# (asm/ast->bytes ast#)
            unh# (unhandled recs#)]
+       (when-not (empty? unh#)
+         (pprint ast#)
+         (pprint recs#))
        (is (empty? unh#)
            (format "Unhandled instructions in output: %s" unh#)))))
 
-(deftest test-available-source
+#_(deftest test-failing-source
+  #_(test-example "APPLE-II.S")
+  #_(test-example "Z80.S")
+  #_(test-example "beast.s")
+  (test-example "opwolf.s"))
+
+#_(deftest test-available-source
   (test-example "68000.s")
   (test-example "9010A-TK80-Demo-Version30-Jun-81.S")
 
