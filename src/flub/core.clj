@@ -13,6 +13,7 @@
             [instaparse.failure :as fail]
             [taoensso.timbre :as log])
   (:use [clojure.pprint]
+        [flub.macro]
         [flub.io.mmap :only [mmap]]
         [flub.io.record :only [disass]]
         [slingshot.slingshot :only [try+]])
@@ -28,14 +29,16 @@
      (println (->> (sp/file->ast file)
                    (asm/ast->bytes)
                    (hex/bytes->str)))
+     0
      (catch instaparse.gll.Failure f
        (fail/pprint-failure (insta/get-failure f))
        1)
      (catch [:undefined :symbol] ude
-         (printf "Undefined symbol: `%s'\n" (:symbol ude)))
+       (printf "Undefined symbol: `%s'\n" (:symbol ude))
+       2)
      (catch Exception e
        (stacktrace/print-cause-trace e)
-       2))))
+       3))))
 
 (defn dc [files]
   (doseq [file files]
@@ -83,4 +86,5 @@
 
 
 (defn -main [cmd & args]
-  ((cmdf cmd) args))
+  (do1 ((cmdf cmd) args)
+       (shutdown-agents)))
