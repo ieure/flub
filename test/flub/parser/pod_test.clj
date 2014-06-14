@@ -21,7 +21,7 @@
        (pod/source->ast (slurp (io/resource "include/Z80.POD"))))))
 
 (defmacro test-pod [^String pod]
-  `(testing ~pod
+  `(testing (str ~pod " pod")
      (let [ast# (pod/file->ast (io/resource (format "include/%s.POD" ~pod)))]
        (is (~'parsed? ast#))
        (is (= :PODDEF (first ast#))))))
