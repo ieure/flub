@@ -4,30 +4,38 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.core
-  (:require [flub.parser.source :as sp]
+  (:require [clojure.stacktrace :as stacktrace]
+            [flub.parser.source :as sp]
             [flub.sig :as sig]
             [flub.io.hex :as hex]
             [flub.assembler :as asm]
             [instaparse.core :as insta]
             [instaparse.failure :as fail]
             [taoensso.timbre :as log])
-  (:use [flub.io.mmap :only [mmap]]
+  (:use [clojure.pprint]
+        [flub.io.mmap :only [mmap]]
         [flub.io.record :only [disass]]
-        [clojure.pprint])
+        [slingshot.slingshot :only [try+]])
   (:gen-class))
 
 (defn sig [files]
   (doseq [file files]
     (printf "%s - %04X\n" file (sig/sign (mmap file)))))
 
-(defn cc [files]
+(defn cc "Compile files to hex." [files]
   (doseq [file files]
-    (let [r (sp/source->ast (slurp file))]
-      (if (insta/failure? r)
-        (do (fail/pprint-failure (insta/get-failure r))
-            1)
-        (do (printf "Parsed `%s'\n" file)
-            0)))))
+    (try+
+     (println (->> (sp/file->ast file)
+                   (asm/ast->bytes)
+                   (hex/bytes->str)))
+     (catch instaparse.gll.Failure f
+       (fail/pprint-failure (insta/get-failure f))
+       1)
+     (catch [:undefined :symbol] ude
+         (printf "Undefined symbol: `%s'\n" (:symbol ude)))
+     (catch Exception e
+       (stacktrace/print-cause-trace e)
+       2))))
 
 (defn dc [files]
   (doseq [file files]
