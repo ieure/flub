@@ -12,12 +12,13 @@
             [flub.parser.pod :as pod]))
 
 (deftest test-pod-parse
-  (is (parsed-to [:PODDEF
-                  [:FORCELN "BUSRQ" [:DEC "4"]]
-                  [:FORCELN "WAIT" [:DEC "5"]]
-                  [:BUS_TEST_ADDR [:HEX "FFFF"]]
-                  [:RUN_UUT_ADDR [:HEX "0000"]]]
-                 (pod/source->ast (slurp (io/resource "include/Z80.POD"))))))
+  (is (parsed-to
+       [:PODDEF
+        [:FORCELN "BUSRQ" [:DEC "4"]]
+        [:FORCELN "WAIT" [:DEC "5"]]
+        [:BUS_TEST_ADDR [:HEX "FFFF"]]
+        [:RUN_UUT_ADDR [:HEX "0000"]]]
+       (pod/source->ast (slurp (io/resource "include/Z80.POD"))))))
 
 (defmacro test-pod [^String pod]
   `(testing ~pod
