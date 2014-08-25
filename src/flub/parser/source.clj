@@ -47,10 +47,8 @@
               (symbols/process))
     {:input inp}))
 
-(defn file->ast "Parse a file into an AST."
-  [file]
+(defn file->ast "Parse a file into an AST." [file]
   (log/infof "Parsing `%s'\n" file)
-  (flush)
   (binding [*stack* (conj *stack* file)]
     (with-open [i (io/reader file)]
       (with-meta
