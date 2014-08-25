@@ -18,10 +18,10 @@
    (parsed-to
     [:S
      [:PODDEF
-      [:FORCELN [:FORCE_LINE "BUSRQ"] [:DEC "4"]]
-      [:FORCELN [:FORCE_LINE "WAIT"] [:DEC "5"]]
-      [:BUS_ADDR [:HEX "FFFF"]]
-      [:UUT_ADDR [:HEX "0000"]]]
+      [:FORCELN "BUSRQ" [:DEC "4"]]
+      [:FORCELN "WAIT" [:DEC "5"]]
+      [:BUS_TEST_ADDR [:HEX "FFFF"]]
+      [:RUN_UUT_ADDR [:HEX "0000"]]]
      [:PROGRAM
       [:PROGRAM_HEAD [:SYMBOL "MAIN"]]
       [:PROGRAM_BODY
