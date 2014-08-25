@@ -6,6 +6,8 @@
 (ns flub.assembler.core
   (:refer-clojure :exclude [resolve])
   (:require [flub.keys :as k]
+            [flub.parser.source :as sp]
+            [flub.io.hex :as hex]
             [clojure.string :as string]
             [clojure.stacktrace :as stacktrace]
             [taoensso.timbre :as log])
@@ -382,3 +384,8 @@
 
 (defn ast->bytes "Emit bytes for an AST."
   [ast] (emit ast))
+
+(defn source->str "Emit hex string for source text." [source]
+  (->> (sp/source->ast source)
+       (ast->bytes)
+       (hex/bytes->str)))
