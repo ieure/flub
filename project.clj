@@ -16,7 +16,10 @@
   :aot :all
   :jvm-opts ["-Xmx1g" "-Xms1g"]
   :main flub.core
-  :profiles {:dev {:resource-paths ["examples/" "resources/"]
+  :resource-paths ["resources/"]
   :injections [(require 'pjstadig.humane-test-output)
                (pjstadig.humane-test-output/activate!)]
+  :profiles {:dev {:resource-paths ["examples/"
+                                    "resources/"
+                                    "test-resources/"]
                    :plugins [[lein-cloverage "1.0.2"]]}})
