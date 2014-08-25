@@ -10,10 +10,13 @@
                  [org.clojure/core.match "0.2.1"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/tools.macro "0.1.2"]
+                 [pjstadig/humane-test-output "0.6.0"]
                  [slingshot "0.10.3"]]
   :warn-on-reflection true
   :aot :all
   :jvm-opts ["-Xmx1g" "-Xms1g"]
   :main flub.core
   :profiles {:dev {:resource-paths ["examples/" "resources/"]
+  :injections [(require 'pjstadig.humane-test-output)
+               (pjstadig.humane-test-output/activate!)]
                    :plugins [[lein-cloverage "1.0.2"]]}})
