@@ -277,7 +277,7 @@
        (resolve-label state label)))
 
 (defemit :EXECUTE [state [e prog]]
-  (vk :exec (emit state prog)))
+  (vk :exec (emit state prog) :enter-yes))
 
 (defemit :SYMBOL [{:keys [labels progs]} [_ sym]]
   (if execution?
