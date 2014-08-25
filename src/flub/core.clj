@@ -23,22 +23,22 @@
   (doseq [file files]
     (printf "%s - %04X\n" file (sig/sign (mmap file)))))
 
-(defn cc "Compile files to hex." [files]
-  (doseq [file files]
-    (try+
-     (println (->> (sp/file->ast file)
-                   (asm/ast->bytes)
-                   (hex/bytes->str)))
-     0
-     (catch instaparse.gll.Failure f
-       (fail/pprint-failure (insta/get-failure f))
-       1)
-     (catch [:undefined :symbol] ude
-       (printf "Undefined symbol: `%s'\n" (:symbol ude))
-       2)
-     (catch Exception e
-       (stacktrace/print-cause-trace e)
-       3))))
+(defn cc "Compile files to hex." [input & [output & _]]
+  (try+
+   (let [out (->> (sp/file->ast input)
+                  (asm/ast->bytes)
+                  (hex/bytes->str))]
+     (println out))
+   0
+   (catch instaparse.gll.Failure f
+     (fail/pprint-failure (insta/get-failure f))
+     1)
+   (catch [:undefined :symbol] ude
+     (printf "Undefined symbol: `%s'\n" (:symbol ude))
+     2)
+   (catch Exception e
+     (stacktrace/print-cause-trace e)
+     3)))
 
 (defn dc [files]
   (doseq [file files]
