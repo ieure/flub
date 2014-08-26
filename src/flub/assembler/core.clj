@@ -200,7 +200,7 @@
 
 (defemit :UNARY [state [_ op target]]
   (vcc (k/keys (get unop-map op))
-       (emit state target)))
+       (rest (emit state target))))
 
 (defemit :DISPLAY [state [d dstr]]
   (vcc (k/key 'displ)
