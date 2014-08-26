@@ -3,7 +3,7 @@
 ;; © 2014 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
-(ns flub.io.record
+(ns flub.io.record-test
   (:use [clojure.test]
         [clojure.pprint])
   (:require [flub.io.record :as r]
