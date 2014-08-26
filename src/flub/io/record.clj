@@ -69,58 +69,63 @@
 (defmethod bytes->tree :trap [[trap mask]]
   [:trap (traps mask)])
 
-(defmethod bytes->tree :forcing-lines [[forcing-lines mask]]
-  [:forcing-lines mask])
+(defmacro defbytes->tree [key args & rest]
+  "Define a method for turning bytes into a tree."
+  `(defmethod bytes->tree ~key [[_ ~@args]]
+     [~key ~@rest]))
 
-(defmethod bytes->tree :beep-on-error [[beep-on-error enable]]
-  [:beep-on-error (byte->bool enable)])
+(defbytes->tree :forcing-lines [mask]
+  mask)
 
-(defmethod bytes->tree :exercise-errors [[exercise-errors enable]]
-  [:exercise-errors (byte->bool enable)])
+(defbytes->tree :beep-on-error [enable]
+  (byte->bool enable))
 
-(defmethod bytes->tree :bus-test-addr [[bus-test-addr & bytes]]
-  [:bus-test-addr (merge-bytes bytes)])
+(defbytes->tree :exercise-errors [enable]
+  (byte->bool enable))
 
-(defmethod bytes->tree :run-uut-addr [[run-uut-addr & bytes]]
-  [:run-uut-addr (merge-bytes bytes)])
+(defbytes->tree :bus-test-addr [& bytes]
+  (merge-bytes bytes))
 
-(defmethod bytes->tree :stall [[stall & bytes]]
-  [:stall-addr (merge-bytes bytes)])
+(defbytes->tree :run-uut-addr [& bytes]
+  (merge-bytes bytes))
 
-(defmethod bytes->tree :unstall [[unstall & bytes]]
-  [:unstall (merge-bytes bytes)])
+(defbytes->tree :stall [ & bytes]
+  [:stall (merge-bytes bytes)])
 
-(defmethod bytes->tree :line-size [[line-size & bytes]]
-  [:line-size (merge-bytes bytes)])
+(defbytes->tree :unstall [& bytes]
+  (merge-bytes bytes))
 
-(defmethod bytes->tree :timeout [[timeout & bytes]]
-  [:timeout (merge-bytes bytes)])
+(defbytes->tree :line-size [& bytes]
+  (merge-bytes bytes))
 
-(defmethod bytes->tree :newline [[newline & bytes]]
-  [:newline (merge-bytes bytes)])
+(defbytes->tree :timeout [& bytes]
+  (merge-bytes bytes))
 
-(defmethod bytes->tree :pod [[pod & chars]]
-  [:pod (bytes->string chars)])
+(defbytes->tree :newline [& bytes]
+  (merge-bytes bytes))
 
-(defmethod bytes->tree :forcing-lines-available [[forcing-lines-available mask]]
-  [:forcing-lines-available mask])
+(defbytes->tree :pod [& chars]
+  (bytes->string chars))
 
-(defmethod bytes->tree :forcing-line-names-lsb [[forcing-line-names-lsb & names]]
-  [:forcing-line-names-lsb (mapv bytes->string (partition 7 names))])
+(defbytes->tree :forcing-lines-available [mask]
+  mask)
 
-(defmethod bytes->tree :forcing-line-names-msb [[forcing-line-names-msb & names]]
-  [:forcing-line-names-msb (mapv bytes->string (partition 7 names))])
+(defbytes->tree :forcing-line-names-lsb [& names]
+  (mapv bytes->string (partition 7 names)))
+
+(defbytes->tree :forcing-line-names-msb [& names]
+  (mapv bytes->string (partition 7 names)))
 
 (defmethod bytes->tree :reserved [& _]
   ;;ERROR
   )
 
 (defmethod bytes->tree :address-descriptor [[address-descriptor
-                                      la lb lc ld   ; Low address
-                                      ha hb hc hd   ; High address
-                                      type          ; Address type
-                                      _ _ _ _ _     ; Padding
-                                      sa sb sc cd]] ; Signature or mask
+                                             la lb lc ld   ; Low address
+                                             ha hb hc hd   ; High address
+                                             type          ; Address type
+                                             _ _ _ _ _     ; Padding
+                                             sa sb sc cd]] ; Signature or mask
   (condp = type
     0x01 [:io (merge-bytes [la lb lc ld]) (merge-bytes [ha hb hc hd])
           (merge-bytes [sa sb sc cd])]
@@ -131,21 +136,21 @@
 (defmethod bytes->tree :prognum [[prognum n]]
   [:program n])
 
-(defmethod bytes->tree :program-body [[program-body & body]]
+(defbytes->tree :program-body [& body]
   ;; Label lookup table follows the 0x50 — We don't care, ignore it.
-  [:program-body (loop [acc []
-                        [byte & bytes] (take-while #(not (#{0x50} %)) body)]
-                   (cond
-                    (nil? byte) acc     ; End of processing
+  (loop [acc []
+         [byte & bytes] (take-while #(not (#{0x50} %)) body)]
+    (cond
+     (nil? byte) acc     ; End of processing
 
-                    ;; String or aux
-                    (#{(k/key :displ) (k/key :aux-if)} byte)
-                    (let [[sb bb] (split-with #(not (#{0x74} %)) bytes)]
-                      (recur (conj acc (k/key-for byte) (bytes->string sb))
-                             (rest bb)))
+     ;; String or aux
+     (#{(k/key :displ) (k/key :aux-if)} byte)
+     (let [[sb bb] (split-with #(not (#{0x74} %)) bytes)]
+       (recur (conj acc (k/key-for byte) (bytes->string sb))
+              (rest bb)))
 
-                    ;; Plain key seq
-                    true (recur (conj acc (k/key-for byte)) bytes)))])
+     ;; Plain key seq
+     true (recur (conj acc (k/key-for byte)) bytes))))
 
 ;; End of source code
 (defmethod bytes->tree :eosc [[eosc]] nil)
