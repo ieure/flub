@@ -11,10 +11,10 @@
             [flub.assembler.core :as asm]))
 
 (deftest comparative-test
-  #_(testing "DELAY.S"
+  (testing "DELAY.S"
     (let [gold (slurp (io/resource "DELAY.H"))
           lead (asm/source->str (slurp (io/resource "DELAY.S")))]
-      (is (= gold lead))))
+      (is (compiled-to gold lead))))
 
   (testing "DEMO.S"
 
