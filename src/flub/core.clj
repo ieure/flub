@@ -11,13 +11,24 @@
             [flub.assembler.core :as asm]
             [instaparse.core :as insta]
             [instaparse.failure :as fail]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [clojure.tools.cli :refer [parse-opts]])
   (:use [clojure.pprint]
         [flub.macro]
         [flub.io.mmap :only [mmap]]
         [flub.io.record :only [disass]]
         [slingshot.slingshot :only [try+]])
   (:gen-class))
+
+(def ^:const core-options
+  [["-v" nil "Verbosity"
+    :id :verbosity
+    :assoc-fn (fn [m k _] (update-in m [k] inc))
+    :default 0]
+   ["-I" "--include=PATH" "Add PATH to the include search path"
+    :id :include
+    :assoc-fn (fn [m k _] (update-in m [k] conj))]
+   ["-h" "--help" "Print this"]])
 
 (defn sig [files]
   (doseq [file files]
@@ -85,6 +96,19 @@
 
 
 
-(defn -main [cmd & args]
-  (do1 ((cmdf cmd) args)
-       (shutdown-agents)))
+(defn -main [& cmdargs]
+  (let [{:keys [:options :arguments :errors]} (parse-opts cmdargs core-options)
+        [cmd & cmdargs] arguments]
+    (condp = (:verbosity options)
+      4 (log/set-level! :trace)
+      3 (log/set-level! :debug)
+      2 (log/set-level! :info)
+      1 (log/set-level! :warn)
+      0 (log/set-level! :fatal)
+      true nil)
+
+    (System/exit
+     (if errors
+       (do (print errors) -1)
+       (do1 (apply (cmdf cmd) cmdargs)
+            (shutdown-agents))))))

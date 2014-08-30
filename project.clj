@@ -9,6 +9,7 @@
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/core.match "0.2.1"]
                  [org.clojure/math.numeric-tower "0.0.4"]
+                 [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.macro "0.1.2"]
                  [pjstadig/humane-test-output "0.6.0"]
                  [slingshot "0.10.3"]]
