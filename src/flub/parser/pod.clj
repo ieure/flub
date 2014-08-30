@@ -23,7 +23,7 @@
     {:input inp}))
 
 (defn file->ast [file]
-  (log/trace "Parsing POD `%s'" file)
+  (log/debugf "Parsing POD `%s'" file)
   (with-open [i (io/reader file)]
     (with-meta
       (doall (source->ast (slurp i)))

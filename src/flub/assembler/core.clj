@@ -65,7 +65,7 @@
     (prewalk #(do (match % [:PROGRAM_HEAD [:SYMBOL s]] (conj! defs s)
                            :else nil) %) ast)
     (let [defs (persistent! defs)]
-      (log/tracef "Found progs %s" defs)
+      (log/infof "Found progs: %s" (string/join ", " defs))
       defs)))
 
 (defn scan-labels "Scan for labels in ast."
@@ -228,7 +228,9 @@
 ;; Containers - these just emit their contents
 
 (defemit :PROGRAM_HEAD [state [ph prog]]
-  (vcc 0x1a (resolve-prog state prog)))
+  (let [pn (resolve-prog state prog)]
+    (log/infof "Assembling program %d: `%s'" pn prog)
+    (vcc 0x1a pn)))
 
 (defemit :PROGRAM_BODY [state [p & rest]]
   ;; "0x53 indicates the start-of-program, and is always the first
