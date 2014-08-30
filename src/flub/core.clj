@@ -8,7 +8,7 @@
             [flub.parser.source :as sp]
             [flub.sig :as sig]
             [flub.io.hex :as hex]
-            [flub.assembler :as asm]
+            [flub.assembler.core :as asm]
             [instaparse.core :as insta]
             [instaparse.failure :as fail]
             [taoensso.timbre :as log])
