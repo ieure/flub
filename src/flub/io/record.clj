@@ -160,6 +160,9 @@
                             :forcing-line-names-lsb
                             :forcing-line-names-msb})
 
+(defn- pp-strip [flmap]
+  (mapv first (filter (fn [[k v]] v) flmap)))
+
 (defn pp "Postprocess parsed records to create forcing line info"
   [recs]
   (let [fls (into {} (filter #(forcing-keys (first %)) recs))
@@ -171,8 +174,11 @@
                    (remove (fn [[k v]] (= v "")))
                    (map (fn [[k v]] [k (keyword v)]))
                    (into {}))]
-    [[:forcing-line-available (bit-lookup (:forcing-lines-available fls) names)]
-     [:forcing-lines (bit-lookup (:forcing-lines fls) names)]]))
+    ;; FIXME
+    ;; :forcing-lines-available should be a map from sym->bitpos
+    ;; :forcing-lines should be a vec of syms
+    [[:forcing-lines-available (:forcing-lines-available fls)]
+     [:forcing-lines (pp-strip (bit-lookup (:forcing-lines fls) names))]]))
 
 (defn disass [bytes]
   ;; (map bytes->tree bytes)
