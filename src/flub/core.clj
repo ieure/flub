@@ -20,6 +20,10 @@
         [slingshot.slingshot :only [try+]])
   (:gen-class))
 
+(defn ppspy [level name expr]
+  (log/log level (str name "\n") (with-out-str (pprint expr)))
+  expr)
+
 (def ^:const core-options
   [["-v" nil "Verbosity"
     :id :verbosity
@@ -36,9 +40,9 @@
 
 (defn cc "Compile files to hex." [input & [output & _]]
   (try+
-   (let [out (->> (sp/file->ast input)
-                  (asm/ast->bytes)
-                  (hex/bytes->str))]
+   (let [ast (ppspy :trace "AST" (sp/file->ast input))
+         bytes (ppspy :trace "Bytes" (asm/ast->bytes ast))
+         out (hex/bytes->str bytes)]
      (println out))
    0
    (catch instaparse.gll.Failure f
