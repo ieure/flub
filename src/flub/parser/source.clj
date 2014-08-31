@@ -63,9 +63,9 @@
 (defmacro include
   [dir & exprs]
   (let [dir (if-not (coll? dir) [dir] dir)]
-    `(binding [*include-stack* (concat *include-stack* ~dir)]
-       (doseq [d# (first ~dir)]
-         (log/infof "Adding include: `%s'" d#))
+    (doseq [d dir]
+      (log/debugf "Adding include: `%s'" d))
+    `(binding [*include-stack* (concat *include-stack* ~@dir)]
        ~@exprs)))
 
 (defn- resource-include "Find an include file in the resources."
@@ -86,13 +86,17 @@
     f
     (throw (IOException. (format "Cannot find include file `%s'" name)))))
 
+(defn pod? [file]
+  (.endsWith (string/lower-case file) ".pod"))
+
 (defn pp-include "Splice included files into the AST." [ast]
   (walk/prewalk
    (fn [form]
      (match form [:INCLUDE name]
             (let [incf (find-include name)]
               (log/debugf "Including file `%s' -> `%s'\n" name incf)
-               (if (.endsWith (string/lower-case name) ".pod")
+              (log/tracef "Include path: %s" (vec *include-stack*))
+               (if (pod? name)
                  (pod/file->ast incf)
                  (vec (cons :INCLUDED (rest (file->ast incf))))))
             :else form))

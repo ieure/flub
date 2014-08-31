@@ -23,6 +23,7 @@
     :default 0]
    ["-I" "--include=PATH" "Add PATH to the include search path"
     :id :include
+    :default []
     :assoc-fn (fn [m k dir] (update-in m [k] conj dir))]])
 
 (defn sig [files]
