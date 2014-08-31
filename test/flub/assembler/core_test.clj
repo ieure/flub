@@ -101,6 +101,13 @@
   (is (= [1 2 3 4] (asm/vcc 1 2 [3 4])))
   (is (= [1 2 3 4] (asm/vcc '(1 2) [3 4]))))
 
+(deftest test-resolve-prog
+  (testing "From sym, with state"
+    (is (= 0 (asm/resolve-prog {:progs ["BLIT"]} [:SYMBOL "BLIT"]))))
+
+  (testing "From num"
+    (is (= 1 (asm/resolve-prog asm/no-state [:DEC "1"])))))
+
 #_(deftest test-ast->bytes
   (let [bytes (asm/ast->bytes ast3)]
     (pprint bytes)

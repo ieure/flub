@@ -77,7 +77,7 @@
 
 ;; Resolving symbols
 
-(defn resolve "Resolve symbol s in symtable tbl."
+(defn ^Integer resolve "Resolve symbol s in symtable tbl."
   [tbl s]
   (let [n (.indexOf (or tbl []) s)]
     (if (< n 0)
@@ -86,11 +86,14 @@
                :symtab tbl})
       n)))
 
-(defn resolve-prog "Resolve a program reference."
+(defn ^Integer resolve-prog "Resolve a program reference."
   [{:keys [progs] :as state} prog]
   (let [out (match prog
                    [:SYMBOL s] (resolve progs s)
-                   :else (emit state prog))]
+                   [:DEC n]    (Integer/parseInt n)
+                   :else       (throw+ {:unknown :program
+                                        :program prog
+                                        :state state}))]
     (log/tracef "@%s resolved prog `%s' -> `%s'"
                 (string/join "->" (:stack state)) prog out)
     out))
