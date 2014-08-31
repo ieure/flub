@@ -40,7 +40,12 @@
    [dc :decompile :dc]
    [help :help]])
 
-(defn stem [name]
+(defn stem
+  "Create a seq of stems of name.
+
+   ex (stem \"foo\") -> (\"foo\" \"fo\" \"f\")"
+
+  [name]
   (map #(subs name 0 %) (range (count name) 0 -1)))
 
 (defn make-command [[f & names]]
@@ -65,7 +70,8 @@
 
 (def ^:constant commands (make-commands command-defs))
 
-(defn cmdf [n]
+(defn cmdf "Return the function for command named n"
+  [n]
   (or (get commands n) (unknown-command n)))
 
 
