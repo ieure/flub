@@ -4,6 +4,7 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.assembler.setup
+  (:refer-clojure :exclude [resolve])
   (:use [flub.assembler.core]))
 
 #_(defn- merge-traps [acc branch]
