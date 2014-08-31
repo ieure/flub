@@ -64,6 +64,8 @@
   [dir & exprs]
   (let [dir (if-not (coll? dir) [dir] dir)]
     `(binding [*include-stack* (concat *include-stack* ~dir)]
+       (doseq [d# (first ~dir)]
+         (log/infof "Adding include: `%s'" d#))
        ~@exprs)))
 
 (defn- resource-include "Find an include file in the resources."

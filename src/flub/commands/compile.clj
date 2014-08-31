@@ -5,7 +5,6 @@
 ;;
 (ns flub.commands.compile
   (:require [clojure.stacktrace :as stacktrace]
-            [clojure.tools.cli :refer [parse-opts]]
             [taoensso.timbre :as log]
             [flub.parser.source :as sp]
             [flub.assembler.core :as asm]
@@ -20,12 +19,7 @@
   (log/log level (str name "\n") (with-out-str (pprint expr)))
   expr)
 
-(def ^:const options
-  [["-I" "--include=PATH" "Add PATH to the include search path"
-    :id :include
-    :assoc-fn (fn [m k _] (update-in m [k] conj))]])
-
-(defn compile "Compile files to hex." [input & output]
+(defn compile "Compile files to hex." [input]
   (try+
    (let [ast (ppspy :trace "AST" (sp/file->ast input))
          bytes (ppspy :trace "Bytes" (asm/ast->bytes ast))
@@ -43,5 +37,5 @@
      3)))
 
 (defn run [& args]
-  (let [pargs (parse-opts args options)]
-    (apply compile args)))
+  (doseq [source args]
+    (compile source)))

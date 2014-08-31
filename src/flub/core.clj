@@ -8,6 +8,7 @@
             [taoensso.timbre :as log]
             [flub.sig :as sig]
             [flub.io.hex :as hex]
+            [flub.parser.source :as sp]
             [flub.commands.compile :as compiler])
   (:use [clojure.pprint]
         [flub.macro]
@@ -19,7 +20,10 @@
   [["-v" nil "Verbosity"
     :id :verbosity
     :assoc-fn (fn [m k _] (update-in m [k] inc))
-    :default 0]])
+    :default 0]
+   ["-I" "--include=PATH" "Add PATH to the include search path"
+    :id :include
+    :assoc-fn (fn [m k dir] (update-in m [k] conj dir))]])
 
 (defn sig [files]
   (doseq [file files]
@@ -78,6 +82,7 @@
 
 (defn -main [& cmdargs]
   (let [{:keys [:options :arguments :errors]} (parse-opts cmdargs core-options)
+        include-dirs (:include options)
         [cmd & cmdargs] arguments]
     (condp = (:verbosity options)
       4 (log/set-level! :trace)
@@ -89,6 +94,10 @@
 
     (System/exit
      (if errors
-       (do (print errors) -1)
-       (do1 (apply (cmdf cmd) cmdargs)
-            (shutdown-agents))))))
+       (do
+         (doseq [e errors]
+           (println e))
+         -1)
+        (sp/include include-dirs
+          (do1 (apply (cmdf cmd) cmdargs)
+               (shutdown-agents)))))))
