@@ -144,7 +144,6 @@
 
 (deftest test-emit-unop
   (is (= [52                            ; INC
-          56                            ; REG
           10]                           ; A
        (asm/emit [:UNARY "INC" [:REGISTER "A"]]))))
 
