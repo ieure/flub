@@ -4,56 +4,26 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.core
-  (:require [clojure.stacktrace :as stacktrace]
-            [flub.parser.source :as sp]
+  (:require [clojure.tools.cli :refer [parse-opts]]
+            [taoensso.timbre :as log]
             [flub.sig :as sig]
             [flub.io.hex :as hex]
-            [flub.assembler.core :as asm]
-            [instaparse.core :as insta]
-            [instaparse.failure :as fail]
-            [taoensso.timbre :as log]
-            [clojure.tools.cli :refer [parse-opts]])
+            [flub.commands.compile :as compile])
   (:use [clojure.pprint]
         [flub.macro]
         [flub.io.mmap :only [mmap]]
-        [flub.io.record :only [disass]]
-        [slingshot.slingshot :only [try+]])
+        [flub.io.record :only [disass]])
   (:gen-class))
 
-(defn ppspy [level name expr]
-  (log/log level (str name "\n") (with-out-str (pprint expr)))
-  expr)
-
-(def ^:const core-options
+(def ^:const core-options "Options which apply to all commands."
   [["-v" nil "Verbosity"
     :id :verbosity
     :assoc-fn (fn [m k _] (update-in m [k] inc))
-    :default 0]
-   ["-I" "--include=PATH" "Add PATH to the include search path"
-    :id :include
-    :assoc-fn (fn [m k _] (update-in m [k] conj))]
-   ["-h" "--help" "Print this"]])
+    :default 0]])
 
 (defn sig [files]
   (doseq [file files]
     (printf "%s - %04X\n" file (sig/sign (mmap file)))))
-
-(defn cc "Compile files to hex." [input & [output & _]]
-  (try+
-   (let [ast (ppspy :trace "AST" (sp/file->ast input))
-         bytes (ppspy :trace "Bytes" (asm/ast->bytes ast))
-         out (hex/bytes->str bytes)]
-     (println out))
-   0
-   (catch instaparse.gll.Failure f
-     (fail/pprint-failure (insta/get-failure f))
-     1)
-   (catch [:undefined :symbol] ude
-     (printf "Undefined symbol: `%s'\n" (:symbol ude))
-     2)
-   (catch Exception e
-     (stacktrace/print-cause-trace e)
-     3)))
 
 (defn dc [files]
   (doseq [file files]
@@ -66,7 +36,7 @@
 
 (def ^:constant command-defs
   [[sig :signature]
-   [cc :compile :cc :cpl]
+   [compile/run :compile :cc :cpl]
    [dc :decompile :dc]
    [help :help]])
 
