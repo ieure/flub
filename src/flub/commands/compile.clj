@@ -5,6 +5,7 @@
 ;;
 (ns flub.commands.compile
   (:require [clojure.stacktrace :as stacktrace]
+            [clojure.tools.cli :refer [parse-opts]]
             [taoensso.timbre :as log]
             [flub.parser.source :as sp]
             [flub.assembler.core :as asm]
@@ -12,18 +13,19 @@
             [instaparse.core :as insta]
             [instaparse.failure :as fail])
   (:use [clojure.pprint]
-        [slingshot.slingshot :only [try+]]))
+        [slingshot.slingshot :only [try+]])
+  (:refer-clojure :exclude [compile]))
 
 (defn ppspy [level name expr]
   (log/log level (str name "\n") (with-out-str (pprint expr)))
   expr)
 
 (def ^:const options
-  ["-I" "--include=PATH" "Add PATH to the include search path"
-   :id :include
-   :assoc-fn (fn [m k _] (update-in m [k] conj))])
+  [["-I" "--include=PATH" "Add PATH to the include search path"
+    :id :include
+    :assoc-fn (fn [m k _] (update-in m [k] conj))]])
 
-(defn run "Compile files to hex." [input & [output & _]]
+(defn compile "Compile files to hex." [input & output]
   (try+
    (let [ast (ppspy :trace "AST" (sp/file->ast input))
          bytes (ppspy :trace "Bytes" (asm/ast->bytes ast))
@@ -39,3 +41,7 @@
    (catch Exception e
      (stacktrace/print-cause-trace e)
      3)))
+
+(defn run [& args]
+  (let [pargs (parse-opts args options)]
+    (apply compile args)))

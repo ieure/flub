@@ -8,7 +8,7 @@
             [taoensso.timbre :as log]
             [flub.sig :as sig]
             [flub.io.hex :as hex]
-            [flub.commands.compile :as compile])
+            [flub.commands.compile :as compiler])
   (:use [clojure.pprint]
         [flub.macro]
         [flub.io.mmap :only [mmap]]
@@ -36,7 +36,7 @@
 
 (def ^:constant command-defs
   [[sig :signature]
-   [compile/run :compile :cc :cpl]
+   [compiler/run :compile :cc :cpl]
    [dc :decompile :dc]
    [help :help]])
 
