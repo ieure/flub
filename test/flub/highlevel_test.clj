@@ -11,7 +11,7 @@
             [flub.io.hex :as hex]
             [flub.io.record :as rec]
             [flub.parser.source :as parse]
-            [flub.assembler :as asm]))
+            [flub.assembler.core :as asm]))
 
 (deftest test-include
   (is
