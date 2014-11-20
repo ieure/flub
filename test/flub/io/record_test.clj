@@ -13,10 +13,9 @@
 #_(deftest test-bytes->tree
   (pprint (map r/bytes->tree '((1 239) (2 48) (13 48) (14 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0) (15 66 85 83 82 81 0 0 87 65 73 84 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0) (5 0 0 255 255) (6 0 0 0 0) (26 0) (83 43 1 68 14 1 0 28 43 2 32 4 0 4 0 28 56 14 28 32 4 0 5 15 28 56 14 28 32 4 3 10 0 28 56 14 28 32 4 3 11 15 28 56 14 28 52 14 45 56 14 47 1 7 44 1 44 2 80 1 3 0 2 10 0) (0)))))
 
-
-(deftest test-pp
-  (is (= [[:forcing-line-available {:WAIT true, :BUSRQ true}]
-          [:forcing-lines {:WAIT true, :BUSRQ true}]]
+(deftest test-pp                        ; Postprocessing
+  (is (= [[:forcing-lines-available {:WAIT 32, :BUSRQ 16}]
+          [:forcing-lines-enabled [:WAIT :BUSRQ]]]
          (r/pp [[:forcing-lines 48]
                 [:forcing-lines-available 48]
                 [:forcing-line-names-lsb ["" "" "" ""]]

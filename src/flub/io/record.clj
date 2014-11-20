@@ -4,7 +4,7 @@
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.record
-  (:use [flub.io.bytes :only [merge-bytes bytes->string bit-lookup]]
+  (:use [flub.io.bytes :only [merge-bytes bytes->string bit-lookup bit-map->vec]]
         [clojure.math.numeric-tower :only [expt]])
   (:require [flub.keys :as k]))
 
@@ -174,11 +174,9 @@
                    (remove (fn [[k v]] (= v "")))
                    (map (fn [[k v]] [k (keyword v)]))
                    (into {}))]
-    ;; FIXME
-    ;; :forcing-lines-available should be a map from sym->bitpos
-    ;; :forcing-lines should be a vec of syms
-    [[:forcing-lines-available (:forcing-lines-available fls)]
-     [:forcing-lines (pp-strip (bit-lookup (:forcing-lines fls) names))]]))
+    [[:forcing-lines-available (into {} (map (fn [[a b]] [b a]) names))]
+     [:forcing-lines-enabled
+      (pp-strip (bit-lookup (:forcing-lines fls) names))]]))
 
 (defn disass [bytes]
   ;; (map bytes->tree bytes)

@@ -99,3 +99,6 @@
                syms)]
     (into {} (map (fn [[smask kw]]
                     [kw (= smask (bit-and smask mask))]) ss))))
+
+(defn bit-map->vec [bmap]
+  (mapv first (filter (fn [[_ v]] v) bmap)))
