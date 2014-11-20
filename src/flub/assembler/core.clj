@@ -1,9 +1,46 @@
-;; -*- coding: utf-8 -*-
-;;
-;; © 2014 Ian Eure.
-;; Author: Ian Eure <ian.eure@gmail.com>
-;;
+; -*- coding: utf-8 -*-
+;
+; © 2014 Ian Eure.
+; Author: Ian Eure <ian.eure@gmail.com>
+;
 (ns flub.assembler.core
+  "# Assembler
+
+   ## Overview
+
+   The assembler accepts an AST, and returns a vector of bytes. The
+   core of the assembler is the `emit` multimethod.
+
+   ## State
+   The `emit` process has state, representing the current position of
+   the emitter within the AST, labels for the GOTO targets of the
+   current program, and the sequence of programs within the file. The
+   `no-state` constant contains the empty state. Emitters must pass
+   the state when recursively calling `emit`.
+
+   ## Dispatch
+   The first element of the AST is used to dispatch. This is the same
+   as the Instaparse keyword representing the thing which was parsed,
+   such as `:EXPR`, `:RAM_TEST`, etc.
+
+   ## Emitters
+   Emitters methods are created with `defemit`, and most call
+   `flub.keys.key` to produce the key codes necessary to represent
+   the porton of the AST they are emitting.
+
+   ## Programs
+   An AST may contain multiple programs. Programs may be numbered or
+   named. Named programs are resolved into integers, in the order they
+   are defined. See `scan-prognames` and `resolv-prog` for more.
+
+   ## Labels
+   A program may contain labels. When a program body is emitted, the
+   AST is scanned for labels, and they are pushed into the state. When
+   a `:GOTO` element is emitted, the label is resolved from the
+   state. A table containing indexes into the output for each label is
+   appended to the body. See `scan-labels`, `resolve-label`, and
+   `make-label-table` for more.
+"
   (:refer-clojure :exclude [resolve])
   (:require [flub.keys :as k]
             [flub.parser.source :as sp]
@@ -18,8 +55,6 @@
         [clojure.tools.macro :only [macrolet]]
         [clojure.pprint]))
 
-
-
 (declare emit)
 
 (defn vcc "Concatenates & flattens its arguments."
@@ -30,10 +65,15 @@
   (loop [[head & tail :as srest] seq
          acc []]
     (cond
+     ;; Complete
      (nil? srest)    acc
+     ;; Ignore nils
      (nil? head)     (recur tail acc)
+     ;; Resolve keywords in to key codes
      (keyword? head) (recur tail (conj acc (k/key head)))
+     ;; Flatten inner sequences
      (coll? head)    (recur tail (vec (concat acc head)))
+     ;; Pass everything else through
      true            (recur tail (conj acc head)))))
 
 (defn execution? "Is this state part of an :EXECUTE?"
@@ -41,7 +81,8 @@
   (contains? stack :EXECUTE))
 
 
-;; Scanning for & resolving program names & labels
+
+;; ## Scanning for & resolving program names & labels
 ;;
 ;; Fluke source has two kinds of symbols: Program names and
 ;; labels. Labels are visible only within the scope of the program
@@ -125,7 +166,7 @@
     (Integer/parseInt val (condp = type :DEC 10 :HEX 16)))
 
 
-;; Emitting bytes
+;; ## Emitting bytes
 ;;
 ;; The byte emitter is built with multimethods which dispatch to the
 ;; correct emitter for that part of the AST. The emit multifn takes

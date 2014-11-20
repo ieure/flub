@@ -1,12 +1,17 @@
-;; -*- coding: utf-8 -*-
-;;
-;; © 2014 Ian Eure All rights reserved.
-;; Author: Ian Eure <ian.eure@gmail.com>
-;;
+; -*- coding: utf-8 -*-
+;
+; © 2014 Ian Eure All rights reserved.
+; Author: Ian Eure <ian.eure@gmail.com>
+;
 (ns flub.keys
   "Map of key symbols to hex key codes."
   (:refer-clojure :exclude [key keys])
   (:require [clojure.string :as string]))
+
+;; The Fluke 9010a represents each key on its keyboard as a
+;; byte. Programs which run on the Fluke are comprised of sequences of
+;; bytes, representing the keys which the operator would press in
+;; order to execute it.
 
 (def ^:const key-table
   "Numeric values for keys in program records.
@@ -85,10 +90,15 @@
    })
 
 (def ^:const inverse-key-table
+  "Inverted map of value -> symbol"
   (assoc (zipmap (vals key-table) (clojure.core/keys key-table))
     0x44 :reg))
 
-(defn normalize [key-ref]
+(defn normalize
+  "Given a key reference input, return its value.
+
+   Input may be a keyword, symbol, string, character, or number."
+  [key-ref]
   (cond
    (keyword? key-ref) key-ref
    (or (char? key-ref) (number? key-ref)) (normalize (str key-ref))
@@ -100,17 +110,23 @@
                 (format "No such key `%s'" key-ref)))))
 
 (defn key
+  "Return the value of `key`."
   ([k] (or (get key-table (normalize k))
            (throw (IllegalArgumentException.
                    (format "No such key `%s'" k))))))
 
-(defn keys [& ks]
-  (mapv key ks))
+(defn keys
+  "Return a sequence of values for the sequence of keys `ks`"
+  [& ks] (mapv key ks))
 
-(defn key-for [code]
+(defn key-for
+  "Return the key symbol for the value `code`."
+  [code]
   (or (get inverse-key-table code)
       (throw (IllegalArgumentException.
                    (format "No such key code `%s'" code)))))
 
-(defn keys-for [codes]
-  (mapv key-for codes))
+(defn keys-for
+  "Return a sequence of key symbols for the sequence of key values
+   `codes`"
+  [codes] (mapv key-for codes))

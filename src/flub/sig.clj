@@ -1,26 +1,38 @@
-;; -*- coding: utf-8 -*-
-;;
-;; © 2013, 2014 Ian Eure.
-;; Author: Ian Eure <ian.eure@gmail.com>
-;;
+; -*- coding: utf-8 -*-
+;
+; © 2013, 2014 Ian Eure.
+; Author: Ian Eure <ian.eure@gmail.com>
+;
 (ns flub.sig
+  "This implements the checksum algorithm used to generate ROM
+   signatures on the Fluke 9010a."
   (:import [java.nio ByteBuffer]))
 
 (def ^:private ^:const starting-offsets [6 8 11 15 0])
 
 (defn shiftbits [x]
-  "Return a hash of `x'.
+  "Return a hash of `x`.
 
-   This takes a 16-bit input value `x' and produces a 10-bit hash by
+   This takes a 16-bit input value `x` and produces a 10-bit hash by
    XORing its bits together."
   (apply bit-xor (map #(bit-shift-right x %) (butlast starting-offsets))))
 
-(defn- rotbits* "Return a seq of shifted bytes." [byte]
-  ;; A seq of `byte' shifted right 8 times
+(defn- rotbits*
+  "Given a byte, return an 8-element seq of successive right shifts.
+
+   For example, the input:
+
+       (rotbits* 128)
+
+   Produces the output:
+
+       (128 64 32 16 8 4 2 1)"
+  [byte]
   (map #(bit-shift-right byte %) (range 8)))
 
-(defn rotbits "Return a seq of shifted bytes for `bytes'" [bytes]
-  (mapcat rotbits* bytes))
+(defn rotbits
+  "Return a seqence of shifted bits for a sequence of bytes."
+  [bytes] (mapcat rotbits* bytes))
 
 (defmulti sign "Return the Fluke signature of the input." type)
 
