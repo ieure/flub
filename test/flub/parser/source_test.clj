@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013, 2014 Ian Eure
+;; © 2013, 2014, 2015 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.source-test
@@ -62,3 +62,18 @@ DECLARATIONS
     REGA = 1
 "]
       (is (parsed? (p/p code :start :PROGRAM))))))
+
+(deftest test-setup
+  (let [code "SETUP
+   TRAP ACTIVE INTERRUPT NO
+   TRAP ACTIVE FORCE LINE NO
+   TRAP CONTROL ERROR NO
+   ENABLE HALT NO"]
+    (is (parsed-to [:SETUP
+                    [:SETUP_TRAP [:SETUP_ACTIVE_INTERRUPT] [:YN "NO"]]
+                    [:SETUP_TRAP [:SETUP_ACTIVE_FORCE_LINE] [:YN "NO"]]
+                    [:SETUP_TRAP [:SETUP_CONTROL_ERROR] [:YN "NO"]]
+                    [:SETUP_ENABLE [:FORCING_LINE "HALT"] " " [:YN "NO"]]]
+                   (p/p code :start :SETUP)))
+    )
+  )
