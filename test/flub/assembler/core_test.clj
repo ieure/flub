@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2014 Ian Eure
+;; © 2014, 2015 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.assembler.core-test
@@ -163,17 +163,34 @@
                    [0x53 0x1F 0x01 0x01 0x1C 0x2B 0x01 0x1F 0x03 0x04
                     0x1C 0x50]))))
 
+(deftest test-labels
+  (testing 'scan-labels
+    ;; No labels here
+    (is (= []
+           (asm/scan-labels (-> ast (rest) (first)))))
+    ;; Two labels
+    (is (= ["WRITE" "DONE"]
+           (asm/scan-labels (-> ast (rest) (rest) (first))))))
+
+  (testing 'resolve-labels
+    (let [state {:labels (asm/scan-labels (-> ast (rest) (rest) (first)))}]
+      (is (= 1 (asm/resolve-label state [:SYMBOL "DONE"])))
+      (is (= 0 (asm/resolve-label state [:SYMBOL "WRITE"]))))))
+
 
 
 (def ^:const example-dir
   "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/")
 
-(defn- unhandled [bytes]
+(defn- unhandled "Return any unhandled records"
+  [bytes]
   (loop [[head & tail] (flatten bytes)
          acc #{}]
     (cond
-     (nil? head) acc
+     (nil? head) acc                    ; Done - return accumulator
+     ;; Add unhandled record
      (= :FIXME head) (recur tail (conj acc (:terminal (first tail))))
+     ;; Handled record, skip
      true (recur tail acc))))
 
 (defmacro test-example [^String example-file]

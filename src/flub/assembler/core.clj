@@ -1,6 +1,6 @@
 ; -*- coding: utf-8 -*-
 ;
-; © 2014 Ian Eure.
+; © 2014, 2015 Ian Eure.
 ; Author: Ian Eure <ian.eure@gmail.com>
 ;
 (ns flub.assembler.core
@@ -99,6 +99,22 @@
 ;; its vector. This is horribly inefficient, but given the small
 ;; tables, it's probably not worth improving at this time.
 
+;; Resolving symbols
+
+(defn ^Integer resolve
+  "Resolve symbol s in symtable tbl.
+
+   The table is expected to be a sequential type containing symbols in
+   order of definition. Returns the integer index of the symbol in the
+   table."
+  [tbl s]
+  (let [n (.indexOf (or tbl []) s)]
+    (if (< n 0)
+      (throw+ {:undefined :symbol
+               :symbol s
+               :symtab tbl})
+      n)))
+
 (defn scan-prognames "Scan for program names in ast."
   [ast]
   (let [defs (transient [])]
@@ -108,24 +124,6 @@
     (let [defs (persistent! defs)]
       (log/infof "Found progs: %s" (string/join ", " defs))
       defs)))
-
-(defn scan-labels "Scan for labels in ast."
-  [ast]
-  (let [defs (transient [])]
-    (prewalk #(do (match % [:LABEL [:SYMBOL s]] (conj! defs s)
-                           :else nil) %) ast)
-    (persistent! defs)))
-
-;; Resolving symbols
-
-(defn ^Integer resolve "Resolve symbol s in symtable tbl."
-  [tbl s]
-  (let [n (.indexOf (or tbl []) s)]
-    (if (< n 0)
-      (throw+ {:undefined :symbol
-               :symbol s
-               :symtab tbl})
-      n)))
 
 (defn ^Integer resolve-prog "Resolve a program reference."
   [{:keys [progs] :as state} prog]
@@ -139,7 +137,22 @@
                 (string/join "->" (:stack state)) prog out)
     out))
 
-(defn resolve-label "Resolve a label."
+;; Labels
+
+(defn scan-labels
+  "Scan for labels in AST. Returns a vec of labels.
+
+   Labels are returned in the order they're defined in the AST."
+  [ast]
+  (let [defs (transient [])]
+    (prewalk #(do (match % [:LABEL [:SYMBOL s]] (conj! defs s)
+                           :else nil) %) ast)
+    (persistent! defs)))
+
+(defn resolve-label
+  "Resolve a label with the current state.
+
+   Returns the integer index into the label table."
   [{:keys [labels] :as state} label]
   (match label
          [:SYMBOL s] (resolve labels s)
@@ -155,9 +168,13 @@
   ([table i bytes]
      (match [bytes]
             [(a :guard empty?)] (flatten table)
-            [([43 n & rest] :seq)] (recur (conj table
-                                                (cons n (int->lebs (+ 1 i))))
-                                          (+ i 2) rest)
+
+            ;; `match' doesn't know what to do with `(k/key :label)'
+            ;; So we use the magic number 43 here.
+            [([43 n & rest] :seq)]
+            (recur (conj table
+                         (cons n (int->lebs (+ 1 i))))
+                   (+ i 2) rest)
             :else (recur table (+ i 1) (rest bytes)))))
 
  ;; Handling numbers
@@ -186,8 +203,21 @@
   ([arg] :stateless)
   ([state [node & _] & _] node))
 
-(def ^:constant no-state "Empty (default) state."
-  {:stack [] :labels [] :progs []})
+(def ^:constant no-state
+  "Empty (default) state.
+
+   `:stack' contains a vec of nodes pointing back up the AST all the
+   way to :S.
+
+   `:labels' contains label symbols for targets in the program
+   currently being emitted. It's populated by the `:PROGRAM' emitter.
+
+   `:progs` contains progam symbols for the whole AST. It's populated
+   by the `:S' emitter.
+"
+  {:stack []
+   :labels []
+   :progs []})
 
 (defmulti emit "Emit bytes for the AST" emit-dispatch)
 
@@ -195,7 +225,11 @@
 (defmethod emit :stateless [ast]
   (emit no-state ast))
 
-(defmacro defemit "Define an AST emitter."
+(defmacro defemit
+  "Define an AST emitter.
+
+   Emitters take two arguments: state, and the current node of the AST
+   being emitted."
   [kw args & body]
   `(defmethod emit ~kw [state# args#]
      (let [state# (update-in state# [:stack] conj ~kw)
@@ -223,6 +257,8 @@
     (log/tracef "@%s - State now: %s" (string/join "->" (:stack state)) state)
     (mapcat (partial emit state) rest)))
 
+;; This node represents an included file. It's spliced into the output
+;; as-is.
 (defemit :INCLUDED [state [inc rest]]
   (emit state rest))
 
@@ -247,7 +283,7 @@
        (rest (emit state target))))
 
 (defemit :DISPLAY [state [d dstr]]
-  (vcc (k/key 'displ)
+  (vcc (k/key :displ)
        (emit state dstr)))
 
 (defemit :AUX [state [d dstr]]
@@ -259,7 +295,7 @@
   (vcc (string->bytes sval) 0x74))
 
 (defemit :GOTO [state [g label]]
-  (vcc (k/key 'goto)
+  (vcc (k/key :goto)
        (resolve-label state label)))
 
 ;; The start of a program scans for progam labels and pushes them into
@@ -328,7 +364,7 @@
   (vk :exec (emit state prog) :enter-yes))
 
 (defemit :SYMBOL [{:keys [labels progs]} [_ sym]]
-  (if execution?
+  (if execution?                        ; This blows
     (resolve progs sym)
     (resolve-label labels sym)))
 
