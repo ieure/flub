@@ -73,7 +73,5 @@ DECLARATIONS
                     [:SETUP_TRAP [:SETUP_ACTIVE_INTERRUPT] [:YN "NO"]]
                     [:SETUP_TRAP [:SETUP_ACTIVE_FORCE_LINE] [:YN "NO"]]
                     [:SETUP_TRAP [:SETUP_CONTROL_ERROR] [:YN "NO"]]
-                    [:SETUP_ENABLE [:FORCING_LINE "HALT"] " " [:YN "NO"]]]
-                   (p/p code :start :SETUP)))
-    )
-  )
+                    [:SETUP_ENABLE [:FORCING_LINE "HALT"] [:YN "NO"]]]
+                   (p/p code :start :SETUP)))))
