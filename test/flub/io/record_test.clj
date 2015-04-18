@@ -112,3 +112,7 @@
 
   (testing "Z80.H"
     (doall (map r/bytes->tree (hex/file->bytes (io/resource "fluke-hex/Z80.H"))))))
+
+(deftest test-type-value
+  (is (= 0x0C (r/type-value :pod)))
+  (is (thrown? Exception (r/type-value :none))))

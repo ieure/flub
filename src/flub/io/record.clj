@@ -1,11 +1,12 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013, 2014 Ian Eure
+;; © 2013, 2014, 2015 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.record
   (:use [flub.io.bytes :only [merge-bytes bytes->string bit-lookup bit-map->vec]]
-        [clojure.math.numeric-tower :only [expt]])
+        [clojure.math.numeric-tower :only [expt]]
+        [slingshot.slingshot :only [throw+]])
   (:require [flub.keys :as k]))
 
 ;; 9010a Programming Manual, p7-3, section 7-5.
@@ -53,6 +54,15 @@
    0x1A :prognum
    0x53 :program-body
    0x00 :eosc})
+
+(def ^:const sym->value-table
+  (into {} (map (fn [[a b]] [b a]) bytes->tree-table)))
+
+(defn type-value "Return the byte value for a record type."
+  [record-type]
+  (if-let [v (get sym->value-table record-type)]
+    v
+    (throw+ {:undefined record-type})))
 
 (defn- bytes->tree-dispatch "Dispatch a call to bytes->tree."
   [[first-byte & _]]
