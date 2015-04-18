@@ -122,7 +122,7 @@
     (prewalk #(do (match % [:PROGRAM_HEAD [:SYMBOL s]] (conj! defs s)
                            :else nil) %) ast)
     (let [defs (persistent! defs)]
-      (log/infof "Found progs: %s" (string/join ", " defs))
+      (log/debugf "Found progs: %s" (string/join ", " defs))
       defs)))
 
 (defn ^Integer resolve-prog "Resolve a program reference."
@@ -307,9 +307,18 @@
 
 ;; Containers - these just emit their contents
 
+(defn- prog-name "Return a readable name for a program's descriptor."
+  [prog]
+  (match prog
+         [:DEC n] n
+         [:SYMBOL s] s))
+
 (defemit :PROGRAM_HEAD [state [ph prog]]
   (let [pn (resolve-prog state prog)]
-    (log/infof "Assembling program %d: `%s'" pn prog)
+    (let [name (prog-name prog)]
+      (if (= name (str pn))
+        (log/infof "Assembling program %d" pn)
+        (log/infof "Assembling program %d: `%s'" pn name)))
     (vcc 0x1a pn)))
 
 (defemit :PROGRAM_BODY [state [p & rest]]

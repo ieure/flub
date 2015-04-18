@@ -280,3 +280,7 @@
   ;; ;; BINARY
   ;; #_(test-example "fluke-tape.s")
   (test-example "opwolf.s"))
+
+(deftest test-prog-name
+  (is (= "0" (#'asm/prog-name [:DEC "0"])))
+  (is (= "MAIN" (#'asm/prog-name [:SYMBOL "MAIN"]))))
