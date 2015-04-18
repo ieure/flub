@@ -45,15 +45,15 @@
   (:require [flub.keys :as k]
             [flub.parser.source :as sp]
             [flub.io.hex :as hex]
+            [flub.io.record :as record]
             [clojure.string :as string]
-            [clojure.stacktrace :as stacktrace]
             [taoensso.timbre :as log])
-  (:use [flub.io.bytes :only [string->bytes int->lebs]]
+  (:use [flub.io.bytes :only [string->bytes int->lebs split-bytes]]
         [slingshot.slingshot :only [throw+]]
         [clojure.core.match :only [match]]
-        [clojure.walk :only [prewalk]]
-        [clojure.tools.macro :only [macrolet]]
-        [clojure.pprint]))
+        [clojure.walk :only [prewalk postwalk]]
+        [clojure.pprint]
+        [clojure.math.numeric-tower :only [expt]]))
 
 (declare emit)
 
@@ -472,6 +472,98 @@
 
 (defemit :RAMP [state [ramp addr]]
   (vk :ramp (emit state addr) :enter-yes))
+
+ ;; Setup
+
+(def ^:constant setup-trap-masks
+  {:SETUP_BAD_POWER_SUPPLY  2r10000000
+   :SETUP_ILLEGAL_ADDRESS   2r00100000
+   :SETUP_ACTIVE_INTERRUPT  2r00100000
+   :SETUP_ACTIVE_FORCE_LINE 2r00001000
+   :SETUP_CONTROL_ERROR     2r00000100
+   :SETUP_ADDRESS_ERROR     2r00000001
+   :SETUP_DATA_ERROR        2r00000010})
+
+(def ^:constant trap-default
+  {:SETUP_BAD_POWER_SUPPLY  true
+   :SETUP_ILLEGAL_ADDRESS   true
+   :SETUP_ACTIVE_INTERRUPT  false
+   :SETUP_ACTIVE_FORCE_LINE true
+   :SETUP_CONTROL_ERROR     true
+   :SETUP_ADDRESS_ERROR     true
+   :SETUP_DATA_ERROR        true})
+
+(defn- declared-traps [defs]
+  (->> (-> #(match %
+                      [:SETUP_TRAP [type] [:YN "YES"]] [type 1]
+                      [:SETUP_TRAP [type] [:YN "NO"]]  [type 0]
+                      :else nil)
+           (map defs))
+       (remove nil?)
+       (into {})))
+
+
+(defemit :SETUP [state [_ & defs]]
+  (println "-----------")
+  (pprint (declared-traps defs)
+   #_(->>
+       (into {})
+       (conj trap-default)))
+
+
+  (println "-----------")
+  nil)
+
+ ;; Pod definitions
+
+(defn- extract-force "Return a seq of (bit name) for all forcing lines."
+  [poddef]
+  (->> (filter (fn [[fl? & _]] (= :FORCELN fl?)) poddef)
+       (map (fn [[_ name def]] (reverse (cons name (emit def)))))))
+
+(def ^:const force-defaults
+  (apply hash-map (interleave (range 8) (repeat "       "))))
+
+(defn- force-pad [name]
+  (apply str name (repeat (- 7 (count name)) " ")))
+
+(defn- force-recs
+  "Return forcing line records."
+  [forcedef]
+  (let [mask [0x0D (reduce bit-or (map #(expt 2 (first %)) forcedef))]
+        names (->> (flatten (map (fn [[bit name]] [bit (force-pad name)]) forcedef))
+                   (apply hash-map)
+                   (conj force-defaults))]
+    [mask
+     (vec (cons (record/type-value :forcing-line-names-msb)
+                (string->bytes (apply str (map names (range 4))))))
+     (vec (cons (record/type-value :forcing-line-names-lsb)
+                (string->bytes (apply str (map names (range 4 8))))))]))
+
+(defn- emit-32bit [rectype addr]
+  (vcc (record/type-value rectype)
+       (match addr
+              [:DEC n] (split-bytes (Long/parseLong (str n)))
+              [:HEX n] (split-bytes (Long/parseLong (str n) 16))
+              :else (throw+ {:message "Unknown address format"
+                             :spec addr}))))
+
+(defemit :BUS_TEST_ADDR [state [_ addr]]
+  (emit-32bit :bus-test-addr addr))
+
+(defemit :RUN_UUT_ADDR [state [_ addr]]
+  (emit-32bit :run-uut-addr addr))
+
+(defemit :PODDEF [state [_ & defs]]
+  (conj (remove nil?
+                (map #(match %
+                             [:BUS_TEST_ADDR & _] (emit state %)
+                             [:RUN_UUT_ADDR & _]  (emit state %)
+                             [:FORCELN & fln]     nil
+                             ;; This shouldn't happen.
+                             :else %)
+                     defs))
+        (force-recs (extract-force defs))))
 
  ;; User-servicable parts
 
