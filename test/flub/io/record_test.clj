@@ -116,3 +116,8 @@
 (deftest test-type-value
   (is (= 0x0C (r/type-value :pod)))
   (is (thrown? Exception (r/type-value :none))))
+
+(deftest test-32bit-bigend
+  (is (= [:run-uut-addr 0x12345678]
+         (-> (hex/line->bytes ":06341278561A")
+             (r/bytes->tree)))))
