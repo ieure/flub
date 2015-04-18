@@ -1,6 +1,6 @@
 ; -*- coding: utf-8 -*-
 ;
-; © 2014 Ian Eure All rights reserved.
+; © 2014, 2015 Ian Eure All rights reserved.
 ; Author: Ian Eure <ian.eure@gmail.com>
 ;
 (ns flub.keys
@@ -82,11 +82,12 @@
    :setup 0x3d
    :displ 0x3e
    :aux-if 0x3f
+   ;; FIXME - unclear if this is *necessary*, but:
    ;; "0x44 is used instad of 0x38 for REG when REG is the first key
    ;; in a program step. For example, REG1 = REG2 would produce 44 01
    ;; 38 02 1C"
    ;; - 9010A Programming Manual p. 7-5
-   ;; :reg 0x44 ;; FIXME
+   ;; :reg 0x44
    })
 
 (def ^:const inverse-key-table
