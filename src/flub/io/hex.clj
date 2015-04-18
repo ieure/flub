@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2014 Ian Eure
+;; © 2014, 2015 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.hex "Parse and generate Fluke format hex."
@@ -10,7 +10,7 @@
   (:require [clojure.string :as string]
             [clojure.java.io :as io])
   (:import [java.text ParseException]
-           [java.io IOException StringReader]))
+           [java.io IOException StringReader BufferedReader]))
 
 (defn split-str-at "Split string s at position n.
                     Returns [head-str tail-str]"
@@ -75,13 +75,20 @@
 
 (defn hex-record? "Is this a line of hex?" [^String line] (= \: (first line)))
 
-(defn- lines->records "Group lines into records."
+(defn lines->records "Group lines into records."
   [lines] (partition-by eor? (filter hex-record? lines)))
 
-(defn- file->records "Group lines of file into records."
+(defn file->records "Group lines of file into records."
   [file]
   (with-open [r (io/reader file)]
     (doall (lines->records (line-seq r)))))
+
+(defn str->records "Break a string of hex data into records."
+  [s]
+  (doall (-> (StringReader. s)
+             (BufferedReader.)
+             (line-seq)
+             (lines->records))))
 
  ;; Hex parsing
 
