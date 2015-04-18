@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2014 Ian Eure
+;; © 2014, 2015 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.record-test
@@ -9,9 +9,6 @@
   (:require [flub.io.record :as r]
             [flub.io.hex :as hex]
             [clojure.java.io :as io]))
-
-#_(deftest test-bytes->tree
-  (pprint (map r/bytes->tree '((1 239) (2 48) (13 48) (14 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0) (15 66 85 83 82 81 0 0 87 65 73 84 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0) (5 0 0 255 255) (6 0 0 0 0) (26 0) (83 43 1 68 14 1 0 28 43 2 32 4 0 4 0 28 56 14 28 32 4 0 5 15 28 56 14 28 32 4 3 10 0 28 56 14 28 32 4 3 11 15 28 56 14 28 52 14 45 56 14 47 1 7 44 1 44 2 80 1 3 0 2 10 0) (0)))))
 
 (deftest test-pp                        ; Postprocessing
   (is (= [[:forcing-lines-available {:WAIT 32, :BUSRQ 16}]
@@ -115,7 +112,3 @@
 
   (testing "Z80.H"
     (doall (map r/bytes->tree (hex/file->bytes (io/resource "fluke-hex/Z80.H"))))))
-
-(deftest test-disass
-  (testing "Z80.H"
-    (pprint (r/disass (hex/file->bytes (io/resource "fluke-hex/Z80.H"))))))
