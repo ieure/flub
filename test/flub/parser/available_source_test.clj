@@ -1,27 +1,21 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013, 2014 Ian Eure.
+;; © 2013, 2014, 2015 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.available-source-test
   (:use [clojure.test]
-        [clojure.pprint]
         [flub.test-util])
   (:require [flub.parser.source :as p]
-            [flub.io.ws :as ws]
-            [instaparse.core :as insta]
-            [clojure.stacktrace :as stacktrace]))
+            [clojure.java.io :as io])
+  (:import [java.io File]))
 
-#_(deftest test-source-issue
-    (is (parsed? (p/source->ast (slurp "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/9010TEST.S")))))
-
-(def ^:const example-dir
-  "/Users/ieure/Dropbox/Projects/flub/examples/fluke-src/")
-
-(defmacro test-example [^String example-file]
-  `(testing ~(str "Parsing " example-file)
-     (is (~'parsed? (p/include ~example-dir
-                               (p/file->ast ~(str example-dir example-file)))))))
+(defmacro test-example "Attempt to parse this source file into an AST."
+  [^String example-file]
+  (let [f (.getPath (io/resource (str "fluke-src/" example-file)))
+        incd (.getParent (File. f))]
+    `(testing ~(str "Parsing " example-file)
+       (is (~'parsed? (p/include ~incd (p/file->ast ~f)))))))
 
 (deftest test-available-source
   (test-example "68000.s")
