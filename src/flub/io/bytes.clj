@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013, 2014 Ian Eure
+;; © 2013, 2014, 2015 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.bytes "Byte-level utils: conversion, checksums, printing"
@@ -51,9 +51,15 @@
                      (swap-bytes bytes)
                      bytes))))
 
-(defn split-bytes "Turn an n-bit Long into a series of 8-bit Ints"
-  [^Long value] ;; FIXME - implement this
-  )
+(defn split-bytes "Turn a 32-bit Long into a vec of 8-bit Ints"
+  ([^Long value] (split-bytes value []))
+
+  ([^Long value acc]
+     (if (< (count acc) 4)
+       (recur (bit-shift-right value 8)
+              (cons (bit-and value 0XFF) acc))
+       (let [[a b c d] acc]
+         [b a d c]))))
 
 (defn checksum "Compute a simple checksum of bytes."
   [bytes] (-> (reduce + bytes) (unchecked-remainder-int 256)))

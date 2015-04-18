@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2014 Ian Eure
+;; © 2014, 2015 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.io.bytes-test
@@ -18,3 +18,14 @@
 (deftest test-string-roundtrip
   (is (= "hello world"
          (->> (b/string->bytes "hello world") (b/bytes->string)))))
+
+(deftest test-merge-bytes
+  (is (= 0x12345678 (b/merge-bytes [0x34 0x12 0x78 0x56]))))
+
+(deftest test-split-bytes
+  (is (= [0x34 0x12 0x78 0x56] (b/split-bytes 0x12345678))))
+
+(deftest test-bytes-rtt
+  (let [v 0x12345678]
+    (is (= v (-> (b/split-bytes v)
+                 (b/merge-bytes))))))
