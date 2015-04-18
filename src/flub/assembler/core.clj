@@ -122,7 +122,9 @@
     (prewalk #(do (match % [:PROGRAM_HEAD [:SYMBOL s]] (conj! defs s)
                            :else nil) %) ast)
     (let [defs (persistent! defs)]
-      (log/debugf "Found progs: %s" (string/join ", " defs))
+      (if (> (count defs) 0)
+        (log/debugf "Found progs: %s" (string/join ", " defs))
+        (log/trace "No named programs in this file."))
       defs)))
 
 (defn ^Integer resolve-prog "Resolve a program reference."
