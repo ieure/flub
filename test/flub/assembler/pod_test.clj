@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2014 Ian Eure.
+;; © 2014, 2015 Ian Eure.
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.assembler.pod-test
@@ -8,7 +8,7 @@
         [clojure.pprint])
   (:require [flub.assembler.core :as asm]))
 
-(deftest test-poddef
+(deftest ^:fixme test-poddef
   (let [ast [:PODDEF
              [:FORCELN "HALT" [:DEC "0"]]
              [:FORCELN "BR/ACK" [:DEC "1"]]
