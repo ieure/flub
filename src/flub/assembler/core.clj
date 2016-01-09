@@ -243,7 +243,7 @@
 
 ;; Fallback emitter - this will break things pretty badly.
 (defmethod emit :default [{:keys [stack] :as state} [s & _ :as subtree]]
-  #_(throw+ {:unhandled s
+  (throw+ {:unhandled s
            :subtree subtree
            :stack stack})
   ;; FIXME for now. Once things are in a better state, it should throw

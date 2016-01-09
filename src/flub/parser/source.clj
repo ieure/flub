@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; © 2013, 2014 Ian Eure
+;; © 2013, 2014, 2015 Ian Eure
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;;
 (ns flub.parser.source
@@ -45,7 +45,7 @@
               (p)
               (pp-include)
               (symbols/process))
-    {:input inp}))
+    {:input "<String>"}))
 
 (defn file->ast "Parse a file into an AST." [file]
   (log/infof "Parsing `%s'\n" file)

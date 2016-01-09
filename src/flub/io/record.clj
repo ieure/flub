@@ -156,7 +156,8 @@
      ;; String or aux
      (#{(k/key :displ) (k/key :aux-if)} byte)
      (let [[sb bb] (split-with #(not (#{0x74} %)) bytes)]
-       (recur (conj acc (k/key-for byte) (bytes->string sb))
+       (recur (conj acc (k/key-for byte)
+                    (bytes->string sb))
               (rest bb)))
 
      ;; Plain key seq
@@ -188,7 +189,8 @@
      [:forcing-lines-enabled
       (pp-strip (bit-lookup (:forcing-lines fls) names))]]))
 
-(defn disass [bytes]
+(defn disass "Disassemble bytes"
+  [bytes]
   ;; (map bytes->tree bytes)
   (let [res (map bytes->tree bytes)
         forcing (pp res)]
