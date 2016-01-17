@@ -1,6 +1,6 @@
 ;;; flub-mode.el --- Major mode for editing Fluke 9000 source
 
-;; Copyright (C) 2014  Ian Eure
+;; Copyright (C) 2014, 2015, 2016  Ian Eure
 
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;; Keywords: extensions, languages
@@ -26,23 +26,34 @@
 
 (defconst flub-mode-font-lock-keywords
   `(
-    ("\\b\\(REG\\)\\(.\\)\\b"
+    ("\\b\\(REG\\)\\s-*\\([A-F0-9]\\)\\b"
      (1 font-lock-builtin-face)
      (2 font-lock-variable-name-face))
 
     (,(format "\\b%s\\b"
               (regexp-opt '("INC" "IF" "DEC" "SIG" "RUN UUT" "SETUP"
-                    "RAM" "GOTO" "EX" "EXECUTE"
-                    "ROM" "IO" "POD")))
-     . font-lock-keyword-face)
+                            "RAM" "GOTO" "EX" "EXECUTE" "ROM" "IO" "TRAP" "POD"
+                            "READ" "RD" "WRITE" "STS"
+                            "BUS TEST" "ADDRESS SPACE INFORMATION")))
+     . font-lock-builtin-face)
 
     ("STOP" . font-lock-warning-face)
 
+    ("\\b\\(YES\\|NO\\)\\b" . font-lock-constant-face)
+
+    (,(format "\\b%s\\b"
+              (regexp-opt '("ACTIVE FORCE LINE"
+                            "ADDRESS ERROR"
+                            "BAD POWER SUPPLY"
+                            "CONTROL ERROR"
+                            "DATA ERROR")))
+     . font-lock-keyword-face)
+
     ("\\bINCLUDE\\b" . font-lock-preprocessor-face)
 
-    ("\\b\\(DPY-?\\)\\(.*\\)"
-     (1 font-lock-keyword-face t)
-     (2 font-lock-string-face t))
+    ("\\b\\(\\(DPY\\|AUX\\)\\s-*-?\\)\\(.\\{0,27\\}\\)"
+     (2 font-lock-builtin-face t)
+     (3 font-lock-string-face t))
 
     ;; Labels
     ("^\\s-*\\([A-Z0-9]+\\):" . font-lock-function-name-face)
@@ -58,14 +69,41 @@
      (2 font-lock-comment-face t))
     ))
 
+(defun flub-indent-line ()
+  "Auto-indent the current line."
+  (interactive)
+
+  (save-excursion
+    (save-match-data
+      (back-to-indentation)
+      (indent-line-to
+       (cond ((or (bobp)
+                  (looking-at "\\(!\\|SETUP\\|PROGRAM\\|[A-Z]:\\)")) 0)
+             ((looking-at "INCLUDE") (if (bobp) 0
+                                       (forward-line -1)
+                                       (current-indentation)))
+             (t 2)))))
+  (when (looking-at "\\s-+") (goto-char (line-end-position))))
+
+(defvar flub-mode-syntax-table
+  (let ((table asm-mode-syntax-table))
+    (modify-syntax-entry table ?! "!")
+    (modify-syntax-entry table ?< "!")))
+
 (define-derived-mode flub-mode asm-mode "f9k"
   "Major mode for editing Fluke 9000 source"
-  (setq asm-comment-char ?!)
   (setq tab-width 2)
   (setq tab-stop-list '(2 0))
-  (set (make-local-variable 'font-lock-defaults)
-       '(flub-mode-font-lock-keywords)))
+  (setq indent-line-function 'flub-indent-line)
+  (setq tab-always-indent t)
 
+  (set-syntax-table flub-mode-syntax-table)
+  (setq asm-comment-char ?!)
+  (setq comment-use-syntax t)
+  (setq fill-prefix nil)
+
+  (set (make-local-variable 'font-lock-defaults)
+       '(flub-mode-font-lock-keywords nil t)))
 
 (provide 'flub-mode)
 ;;; flub-mode.el ends here
