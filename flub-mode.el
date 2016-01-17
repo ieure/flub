@@ -32,9 +32,10 @@
 
     (,(format "\\b%s\\b"
               (regexp-opt '("INC" "IF" "DEC" "SIG" "RUN UUT" "SETUP"
-                            "RAM" "GOTO" "EX" "EXECUTE" "ROM" "IO" "TRAP" "POD"
+                            "RAM"  "ROM" "IO" "TRAP" "POD"
                             "READ" "RD" "WRITE" "STS"
                             "BUS TEST" "ADDRESS SPACE INFORMATION")))
+
      . font-lock-builtin-face)
 
     ("STOP" . font-lock-warning-face)
@@ -58,7 +59,13 @@
     ;; Labels
     ("^\\s-*\\([A-Z0-9]+\\):" . font-lock-function-name-face)
 
-    ("\\(PROGRAM\\)\s+\\([^\s-]+\\)" (1 font-lock-keyword-face)
+    ("\\(PROGRAM\\)\s+\\([0-9A-Z]+\\)" (1 font-lock-keyword-face)
+     (2 font-lock-function-name-face))
+
+    ("\\(EX\\|EXECUTE\\)\s+\\([0-9A-Z]+\\)" (1 font-lock-keyword-face)
+     (2 font-lock-function-name-face))
+
+    ("\\(GOTO\\)\s+\\([0-9A-Z]+\\)" (1 font-lock-keyword-face)
      (2 font-lock-function-name-face))
 
     ("\\b[0-9A-F]+\\b" . font-lock-constant-face)
@@ -78,7 +85,7 @@
       (back-to-indentation)
       (indent-line-to
        (cond ((or (bobp)
-                  (looking-at "\\(!\\|SETUP\\|PROGRAM\\|[A-Z]:\\)")) 0)
+                  (looking-at "\\(!\\|SETUP\\|PROGRAM\\|[0-9A-Z]+:\\)")) 0)
              ((looking-at "INCLUDE") (if (bobp) 0
                                        (forward-line -1)
                                        (current-indentation)))
