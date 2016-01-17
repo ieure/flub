@@ -76,21 +76,28 @@
      (2 font-lock-comment-face t))
     ))
 
+(defun flub-last-indentation ()
+  "Return the indentation of the last nonblank line."
+  (save-excursion
+    (goto-char (line-beginning-position))
+    (while (looking-at "^\\s-*$")
+      (next-line -1))
+    (current-indentation)))
+
 (defun flub-indent-line ()
   "Auto-indent the current line."
   (interactive)
 
-  (save-excursion
-    (save-match-data
+  (save-match-data
+    (save-excursion
       (back-to-indentation)
       (indent-line-to
        (cond ((or (bobp)
-                  (looking-at "\\(!\\|SETUP\\|PROGRAM\\|[0-9A-Z]+:\\)")) 0)
-             ((looking-at "INCLUDE") (if (bobp) 0
-                                       (forward-line -1)
-                                       (current-indentation)))
-             (t 2)))))
-  (when (looking-at "\\s-+") (goto-char (line-end-position))))
+                  (looking-at "\\(SETUP\\|PROGRAM\\|[0-9A-Z]+:\\)")) 0)
+             ((looking-at "\\(!\\|INCLUDE\\)")
+              (flub-last-indentation))
+             (t 2))))
+    (when (looking-at "\\s-+") (goto-char (line-end-position)))))
 
 (defvar flub-mode-syntax-table
   (let ((table asm-mode-syntax-table))
